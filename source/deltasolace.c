@@ -133,22 +133,8 @@ static void timerCbFunc(solClient_opaqueContext_pt opaqueContext_p, void* user_p
     delete (payload);
 }
 
-int setBatchData(K* batch, int subsType, const char* topicName, int replyType, const char* replyName, const char* correlationId, solClient_opaqueFlow_pt flowPtr, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
+int addMsgToList(K* batch, int subsType, const char* topicName, int replyType, const char* replyName, const char* correlationId, solClient_opaqueFlow_pt flowPtr, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
 {
-    // if not created yet, create the table
-    if (NULL == (*batch))
-    {
-       (*batch) = knk(0);
-       jk(&(*batch), ktn(KI, 0)); //[0]
-       jk(&(*batch), knk(0));     //[1]
-       jk(&(*batch), ktn(KI, 0)); //[2]
-       jk(&(*batch), knk(0));     //[3]
-       jk(&(*batch), knk(0));     //[4]
-       jk(&(*batch), ktn(KJ, 0)); //[5]
-       jk(&(*batch), ktn(KJ, 0)); //[6]
-       jk(&(*batch), knk(0));     //[7]
-    }
-
    ja(&(((K*)(*batch)->G0)[0]), &subsType);
    jk(&(((K*)(*batch)->G0)[1]), kp((char*)topicName));
    ja(&(((K*)(*batch)->G0)[2]), &replyType);
@@ -337,29 +323,21 @@ solClient_rxMsgCallback_returnCode_t flowMsgCallbackFunc ( solClient_opaqueFlow_
     {
         // not baching - yet
         K vals = knk(0);
-        jk(&(vals), ktn(KI, 0));
-        ja(&(((K*)vals->G0)[0]), &destination.destType);
-        jk(&(vals), knk(0));
-        jk(&(((K*)vals->G0)[1]), kp((char*)tmpDest.c_str()));
-        jk(&(vals), ktn(KI,0));
-        ja(&(((K*)vals->G0)[2]), &replyto.destType);
-        jk(&(vals), knk(0));
-        jk(&(((K*)vals->G0)[3]), kp((char*)replyToName));
-        jk(&(vals), knk(0));
-        jk(&(((K*)vals->G0)[4]), kp((char*)correlationid));
-        jk(&(vals), ktn(KJ,0));
-        ja(&(((K*)vals->G0)[5]), &opaqueFlow_p);
-        jk(&(vals), ktn(KJ,0));
-        ja(&(((K*)vals->G0)[6]), &msgId);
-        jk(&(vals), knk(0));
-        jk(&(((K*)vals->G0)[7]), kpn((char*)dataPtr,dataSize));
-
+        jk(&(vals), ktn(KI, 0));//[0]
+        jk(&(vals), knk(0));    //[1]
+        jk(&(vals), ktn(KI,0)); //[2]
+        jk(&(vals), knk(0));    //[3]
+        jk(&(vals), knk(0));    //[4]
+        jk(&(vals), ktn(KJ,0)); //[5]
+        jk(&(vals), ktn(KJ,0)); //[6]
+        jk(&(vals), knk(0));    //[7]
+        addMsgToList(&(vals), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
         msgAndSource._event._subMsg->_vals = vals;
         int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
         if (numWritten != sizeof(msgAndSource))
         {
             // start batching now
-            setBatchData(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
+            it->second = vals;
             delete (msgAndSource._event._subMsg);
             // start timer with topic and timer payload
             TimerPayload* timerPayload = new TimerPayload;
@@ -374,7 +352,7 @@ solClient_rxMsgCallback_returnCode_t flowMsgCallbackFunc ( solClient_opaqueFlow_
     {
         // batching
         // add current msg data and get batch size
-        int currentBatchSize = setBatchData(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
+        int currentBatchSize = addMsgToList(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
         // if batch over batch size attempt to send.
         if (currentBatchSize >= 1000)
         {
