@@ -101,28 +101,26 @@ struct TimerPayload
 };
 
 typedef std::map<std::string, K> batchInfoMap;
-static batchInfoMap BATCH_INFO;
+static batchInfoMap BATCH_PER_DESTINATION;
 
-static void batchingTopicPublishFunc(solClient_opaqueContext_pt opaqueContext_p, void* user_p)
+static void timerCbFunc(solClient_opaqueContext_pt opaqueContext_p, void* user_p)
 {
     TimerPayload* payload = (static_cast<TimerPayload*>(user_p));
     // lookup batch info and retrieve batch for this destination
-    batchInfoMap::iterator find = BATCH_INFO.find(payload->dest);
-    if (find == BATCH_INFO.end())
+    batchInfoMap::iterator find = BATCH_PER_DESTINATION.find(payload->dest);
+    if (find == BATCH_PER_DESTINATION.end())
     {
         printf("[%ld] Solace problem finding batch to send on Timer for destination %s.\n", THREAD_ID, payload->dest.c_str());
         return;
     }
-    else if (NULL == find->second)
+    if (NULL == find->second)
     {
-        // batch was sent and cleared by the last receive on this destination
-        // stop timer and clean up payload
+        // batch send must already have happened due to a received msg on same dest finding socket write available
         solClient_returnCode_t rc;
         if ((rc = solClient_context_stopTimer(context, &payload->destTimer)) != SOLCLIENT_OK)
             printf("[%ld] Solace problem couldn't stop batch timer for destination %s.\n", THREAD_ID, payload->dest.c_str());
         
-        delete (static_cast<TimerPayload*>(user_p));
-        user_p = NULL;
+        delete (payload);
         return;
     }
     // attempt to send the batch over the pipe
@@ -146,8 +144,7 @@ static void batchingTopicPublishFunc(solClient_opaqueContext_pt opaqueContext_p,
         printf("[%ld] Solace problem couldn't stop batch timer for destination %s.\n", THREAD_ID, payload->dest.c_str());
     
     // delete payload
-    delete (static_cast<TimerPayload*>(user_p));
-    user_p = NULL;
+    delete (payload);
     // reset batch
     find->second = NULL;
 }
@@ -343,13 +340,13 @@ solClient_rxMsgCallback_returnCode_t flowMsgCallbackFunc ( solClient_opaqueFlow_
         return SOLCLIENT_CALLBACK_OK;
     }
     // lookup batch info and check if its batch is NULL 
-    batchInfoMap::iterator it = BATCH_INFO.find(tmpDest);
-    if (it == BATCH_INFO.end())
+    batchInfoMap::iterator it = BATCH_PER_DESTINATION.find(tmpDest);
+    if (it == BATCH_PER_DESTINATION.end())
     {
         // first update on this destination - insert entry to map
         K tmp = NULL;
-        BATCH_INFO.insert(std::make_pair(tmpDest, tmp));
-        it = BATCH_INFO.find(tmpDest);
+        BATCH_PER_DESTINATION.insert(std::make_pair(tmpDest, tmp));
+        it = BATCH_PER_DESTINATION.find(tmpDest);
     }
 
     if (NULL == it->second)
@@ -381,10 +378,10 @@ solClient_rxMsgCallback_returnCode_t flowMsgCallbackFunc ( solClient_opaqueFlow_
             setBatchData(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
             delete (msgAndSource._event._subMsg);
             // start timer with topic and timer payload
-            TimerPayload* payload = new TimerPayload;
-            payload->dest.assign(tmpDest);
+            TimerPayload* timerPayload = new TimerPayload;
+            timerPayload->dest.assign(tmpDest);
             solClient_returnCode_t rc;
-            if ((rc = solClient_context_startTimer(context, SOLCLIENT_CONTEXT_TIMER_REPEAT, 100, batchingTopicPublishFunc, (void*)payload, &payload->destTimer)) != SOLCLIENT_OK)
+            if ((rc = solClient_context_startTimer(context, SOLCLIENT_CONTEXT_TIMER_REPEAT, 100, timerCbFunc, (void*)timerPayload, &timerPayload->destTimer)) != SOLCLIENT_OK)
                 printf("[%ld] Solace problem starting batch timer for destination %s.\n", THREAD_ID, tmpDest.c_str());
         }
         return SOLCLIENT_CALLBACK_OK;
