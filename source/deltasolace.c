@@ -108,45 +108,29 @@ static void timerCbFunc(solClient_opaqueContext_pt opaqueContext_p, void* user_p
     TimerPayload* payload = (static_cast<TimerPayload*>(user_p));
     // lookup batch info and retrieve batch for this destination
     batchInfoMap::iterator find = BATCH_PER_DESTINATION.find(payload->dest);
-    if (find == BATCH_PER_DESTINATION.end())
+    if ((find != BATCH_PER_DESTINATION.end()) && (NULL != find->second))
     {
-        printf("[%ld] Solace problem finding batch to send on Timer for destination %s.\n", THREAD_ID, payload->dest.c_str());
-        return;
+        // attempt to send the batch over the pipe
+        KdbSolaceEvent msgAndSource;
+        msgAndSource._type = MSG_EVENT;
+        msgAndSource._event._subMsg = new KdbSolaceEventSubMsg;
+        msgAndSource._event._subMsg->_destName.assign(payload->dest);
+        msgAndSource._event._subMsg->_vals = (find->second);
+        int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+        if (numWritten != sizeof(msgAndSource))
+        {
+            msgAndSource._event._subMsg->_vals = NULL;
+            delete (msgAndSource._event._subMsg);
+            // allow timer to repeat, try again later
+            return;
+        }
+        // reset batch
+        find->second = NULL;
     }
-    if (NULL == find->second)
-    {
-        // batch send must already have happened due to a received msg on same dest finding socket write available
-        solClient_returnCode_t rc;
-        if ((rc = solClient_context_stopTimer(context, &payload->destTimer)) != SOLCLIENT_OK)
-            printf("[%ld] Solace problem couldn't stop batch timer for destination %s.\n", THREAD_ID, payload->dest.c_str());
-        
-        delete (payload);
-        return;
-    }
-    // attempt to send the batch over the pipe
-    KdbSolaceEvent msgAndSource;
-    msgAndSource._type = MSG_EVENT;
-    msgAndSource._event._subMsg = new KdbSolaceEventSubMsg;
-    msgAndSource._event._subMsg->_destName.assign(payload->dest);
-    msgAndSource._event._subMsg->_vals = (find->second);
-    int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
-    if (numWritten != sizeof(msgAndSource))
-    {
-        msgAndSource._event._subMsg->_vals = NULL;
-        delete (msgAndSource._event._subMsg);
-        // allow timer to repeat
-        return;
-    }
-    // batch sent
-    // stop timer
     solClient_returnCode_t rc;
     if ((rc = solClient_context_stopTimer(context, &payload->destTimer)) != SOLCLIENT_OK)
         printf("[%ld] Solace problem couldn't stop batch timer for destination %s.\n", THREAD_ID, payload->dest.c_str());
-    
-    // delete payload
     delete (payload);
-    // reset batch
-    find->second = NULL;
 }
 
 int setBatchData(K* batch, int subsType, const char* topicName, int replyType, const char* replyName, const char* correlationId, solClient_opaqueFlow_pt flowPtr, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
