@@ -87,12 +87,12 @@ enum KdbSolaceEndpointType
     KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE  = 3
 };
 
-struct FlowSubscriptionInfo
+struct GurananteedSubInfo
 {
     solClient_opaqueFlow_pt flow_pt;
     std::string             flowKdbCbFunc;
 };
-static std::map<std::string, FlowSubscriptionInfo> FLOW_INFO;
+static std::map<std::string, GurananteedSubInfo> GUARANTEED_SUB_INFO;
 
 struct TimerPayload 
 {
@@ -112,8 +112,8 @@ static void timerCbFunc(solClient_opaqueContext_pt opaqueContext_p, void* user_p
     {
         // attempt to send the batch over the pipe
         KdbSolaceEvent msgAndSource;
-        msgAndSource._type = MSG_EVENT;
-        msgAndSource._event._subMsg = new KdbSolaceEventSubMsg;
+        msgAndSource._type = GUARANTEED_MSG_EVENT;
+        msgAndSource._event._subMsg = new KdbSolaceEventGuarSubMsg;
         msgAndSource._event._subMsg->_destName.assign(payload->dest);
         msgAndSource._event._subMsg->_vals = (find->second);
         int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
@@ -215,11 +215,11 @@ K kdbCallback(I d)
             delete (msgAndSource._event._flow);
             return (K)0;
         }
-        else if (msgAndSource._type != MSG_EVENT)
+        else if (msgAndSource._type != GUARANTEED_MSG_EVENT)
             return (K)0;
         
-        std::map<std::string,FlowSubscriptionInfo>::const_iterator it = FLOW_INFO.find(msgAndSource._event._subMsg->_destName);
-        if (it == FLOW_INFO.end())
+        std::map<std::string,GurananteedSubInfo>::const_iterator it = GUARANTEED_SUB_INFO.find(msgAndSource._event._subMsg->_destName);
+        if (it == GUARANTEED_SUB_INFO.end())
         {
             printf ( "[%ld] Solace received callback message on flow with no callback function subscription:%s)\n", THREAD_ID, msgAndSource._event._subMsg->_destName.c_str());
             // clean up the sub item
@@ -275,8 +275,8 @@ solClient_rxMsgCallback_returnCode_t flowMsgCallbackFunc ( solClient_opaqueFlow_
     }
 
     KdbSolaceEvent msgAndSource;
-    msgAndSource._type = MSG_EVENT;
-    msgAndSource._event._subMsg = new KdbSolaceEventSubMsg;
+    msgAndSource._type = GUARANTEED_MSG_EVENT;
+    msgAndSource._event._subMsg = new KdbSolaceEventGuarSubMsg;
     msgAndSource._event._subMsg->_destName.assign(destination.dest);
     std::string tmpDest;
     tmpDest.assign(destination.dest);
@@ -878,10 +878,10 @@ K subscribetmp_solace(K type,  K callbackFunction)
     }
 
     // remember callback function to use for this subscription
-    FlowSubscriptionInfo subInfo;
+    GurananteedSubInfo subInfo;
     subInfo.flow_pt = flow_p;
     subInfo.flowKdbCbFunc = callbackFunction->s;
-    FLOW_INFO.insert(std::pair<std::string,FlowSubscriptionInfo>(replyToAddr.dest,subInfo));
+    GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(replyToAddr.dest,subInfo));
 
     return ks((char*)replyToAddr.dest);
 }
@@ -896,7 +896,7 @@ K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunc
 
     if ((type->i == KDB_SOLACE_ENDPOINT_TYPE_QUEUE) || (type->i == KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE))
     {
-        if (FLOW_INFO.find(endpointname->s) != FLOW_INFO.end())
+        if (GUARANTEED_SUB_INFO.find(endpointname->s) != GUARANTEED_SUB_INFO.end())
         {
             printf("[%ld] Solace subscription not being created for %s, as existing subscription to queue exists\n",THREAD_ID,endpointname->s);
             return ki(SOLCLIENT_OK);
@@ -904,7 +904,7 @@ K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunc
     }
     else
     {
-        if (FLOW_INFO.find(topicname->s) != FLOW_INFO.end())
+        if (GUARANTEED_SUB_INFO.find(topicname->s) != GUARANTEED_SUB_INFO.end())
         {
             printf("[%ld] Solace subscription not being created for %s, as existing subscription to topic exists\n",THREAD_ID,topicname->s);
             return ki(SOLCLIENT_OK);
@@ -951,13 +951,13 @@ K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunc
     }
 
     // remember callback function to use for this subscription
-    FlowSubscriptionInfo subInfo;
+    GurananteedSubInfo subInfo;
     subInfo.flow_pt = flow_p;
     subInfo.flowKdbCbFunc = callbackFunction->s;
     if ((type->i == KDB_SOLACE_ENDPOINT_TYPE_QUEUE) || (type->i == KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE))
-        FLOW_INFO.insert(std::pair<std::string,FlowSubscriptionInfo>(endpointname->s,subInfo));
+        GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(endpointname->s,subInfo));
     else
-        FLOW_INFO.insert(std::pair<std::string,FlowSubscriptionInfo>(topicname->s,subInfo));
+        GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(topicname->s,subInfo));
 
     return ki(SOLCLIENT_OK);
 }
@@ -974,9 +974,9 @@ K unsubscribepersistent_solace(K type, K endpointname, K topicname)
     else
         subname = topicname->s;
 
-    std::map<std::string,FlowSubscriptionInfo>::iterator it;
-    it = FLOW_INFO.find(subname);
-    if (it == FLOW_INFO.end())
+    std::map<std::string,GurananteedSubInfo>::iterator it;
+    it = GUARANTEED_SUB_INFO.find(subname);
+    if (it == GUARANTEED_SUB_INFO.end())
     {
         printf("[%ld] Solace unsubscribe for subscription %s that doesnt exist\n", THREAD_ID, subname);
         return krr((S)"Solace unsubscribe for subscription that doesnt exist");
@@ -989,7 +989,7 @@ K unsubscribepersistent_solace(K type, K endpointname, K topicname)
     else
         printf("[%ld] Solace subscription removed for %s\n", THREAD_ID, subname);
 
-    FLOW_INFO.erase(it);
+    GUARANTEED_SUB_INFO.erase(it);
 
     return ki(retCode);
 }

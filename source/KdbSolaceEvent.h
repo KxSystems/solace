@@ -8,7 +8,8 @@
 
 typedef enum
 {
-    MSG_EVENT,
+    GUARANTEED_MSG_EVENT,
+    DIRECT_MSG_EVENT,
     SESSION_EVENT,
     FLOW_EVENT
 } KDB_SOLACE_EVENT_TYPE;
@@ -29,7 +30,7 @@ struct KdbSolaceEventFlowDetail
     std::string _destName;
 };
 
-struct KdbSolaceEventSubMsg
+struct KdbSolaceEventGuarSubMsg
 {
     solClient_opaqueMsg_pt  _msg;
     solClient_opaqueFlow_pt _opaqueFlow;
@@ -43,7 +44,7 @@ struct KdbSolaceEvent
     KDB_SOLACE_EVENT_TYPE           _type;
     union
     {
-        KdbSolaceEventSubMsg*           _subMsg;
+        KdbSolaceEventGuarSubMsg*       _subMsg;
         KdbSolaceEventFlowDetail*       _flow;
         KdbSolaceEventSessionDetail*    _session;
     } _event; 
