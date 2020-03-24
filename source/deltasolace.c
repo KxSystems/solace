@@ -215,6 +215,17 @@ K kdbCallback(I d)
             delete (msgAndSource._event._flow);
             return (K)0;
         }
+        else if (msgAndSource._type == DIRECT_MSG_EVENT)
+        {
+            //TODO
+            printf("!!!! TODO KDB CALLBACK GOT DIRECT_MSG_EVENT\n");
+            solClient_opaqueMsg_pt msg = msgAndSource._event._directMsg;
+            solClient_destination_t msgDest;
+            if (solClient_msg_getDestination(msg,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
+                printf("!!! destination %s\n",msgDest.dest);
+            solClient_msg_free(&msg);
+            return (K)0;
+        }
         else if (msgAndSource._type != GUARANTEED_MSG_EVENT)
             return (K)0;
         
@@ -258,13 +269,23 @@ K sendack_solace(K flow, K msgid)
     return ki(retCode);
 }
 
-/* The message receive callback function is mandatory for session creation. */
-solClient_rxMsgCallback_returnCode_t defaultReceiveCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_opaqueMsg_pt msg_p, void *user_p )
+/* The message receive callback function is mandatory for session creation. Gets called with msgs from direct subscriptions. */
+solClient_rxMsgCallback_returnCode_t defaultSubCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_opaqueMsg_pt msg_p, void *user_p )
 {
-    return SOLCLIENT_CALLBACK_OK;
+    KdbSolaceEvent msgAndSource;
+    msgAndSource._type = DIRECT_MSG_EVENT;
+    msgAndSource._event._directMsg=msg_p;
+    ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+    if (numWritten != sizeof(msgAndSource))
+    {
+        //TODO printf("Blocked!\n");
+        return SOLCLIENT_CALLBACK_OK;
+    }
+    // take control of the msg_p memory
+    return SOLCLIENT_CALLBACK_TAKE_MSG;
 }
 
-solClient_rxMsgCallback_returnCode_t flowMsgCallbackFunc ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_opaqueMsg_pt msg_p, void *user_p )
+solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_opaqueMsg_pt msg_p, void *user_p )
 {
     //solClient_msg_dump(msg_p,NULL,0);
     solClient_destination_t destination;
@@ -533,7 +554,7 @@ K init_solace(K options)
      * Message receive callback function and the Session event function
      * are both mandatory. In this sample, default functions are used.
      */
-    sessionFuncInfo.rxMsgInfo.callback_p = defaultReceiveCallback;
+    sessionFuncInfo.rxMsgInfo.callback_p = defaultSubCallback;
     sessionFuncInfo.rxMsgInfo.user_p = NULL;
     sessionFuncInfo.eventInfo.callback_p = eventCallback;
     sessionFuncInfo.eventInfo.user_p = NULL;
@@ -765,8 +786,8 @@ K endpointtopicunsubscribe_solace(K options, K provFlags, K topic)
 K senddirect_solace(K topic, K data)
 {
     CHECK_SESSION_CREATED;
-    CHECK_PARAM_TYPE(topic,-KS,"send_solace");
-    CHECK_PARAM_DATA_TYPE(data,"send_solace");
+    CHECK_PARAM_TYPE(topic,-KS,"senddirect_solace");
+    CHECK_PARAM_DATA_TYPE(data,"senddirect_solace");
     
     /* Set the destination. */
     solClient_destination_t destination;
@@ -789,6 +810,26 @@ K senddirect_solace(K topic, K data)
         return ki(retCode);
     }
     return ki(SOLCLIENT_OK);
+}
+
+K subscribedirect_solace(K topic)
+{
+    CHECK_SESSION_CREATED;
+    CHECK_PARAM_TYPE(topic,-KS,"subscribedirect_solace");
+    solClient_returnCode_t ret = solClient_session_topicSubscribeExt ( session_p,
+                                          SOLCLIENT_SUBSCRIBE_FLAGS_REQUEST_CONFIRM,
+                                          topic->s );
+    return ki(ret);
+}
+
+K unsubscribedirect_solace(K topic)
+{
+    CHECK_SESSION_CREATED;
+    CHECK_PARAM_TYPE(topic,-KS,"subscribedirect_solace");
+    solClient_returnCode_t ret = solClient_session_topicUnsubscribeExt (session_p,
+                                        SOLCLIENT_SUBSCRIBE_FLAGS_REQUEST_CONFIRM,
+                                        topic->s );
+    return ki(ret);
 }
 
 K sendpersistent_solace(K type, K dest, K replyType, K replydest, K data, K correlationId)
@@ -840,7 +881,7 @@ K subscribetmp_solace(K type,  K callbackFunction)
     CHECK_PARAM_TYPE(callbackFunction,-KS,"subscribetmp_solace");
 
     solClient_flow_createFuncInfo_t flowFuncInfo = SOLCLIENT_SESSION_CREATEFUNC_INITIALIZER;
-    flowFuncInfo.rxMsgInfo.callback_p = flowMsgCallbackFunc;
+    flowFuncInfo.rxMsgInfo.callback_p = guaranteedSubCallback;
     flowFuncInfo.rxMsgInfo.user_p = NULL;
     flowFuncInfo.eventInfo.callback_p = flowEventCallback;
     flowFuncInfo.eventInfo.user_p = NULL;
@@ -916,7 +957,7 @@ K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunc
     int         propIndex = 0;
     solClient_flow_createFuncInfo_t flowFuncInfo = SOLCLIENT_SESSION_CREATEFUNC_INITIALIZER;
     // create callbacks for flow
-    flowFuncInfo.rxMsgInfo.callback_p = flowMsgCallbackFunc;
+    flowFuncInfo.rxMsgInfo.callback_p = guaranteedSubCallback;
     flowFuncInfo.rxMsgInfo.user_p = NULL;
     flowFuncInfo.eventInfo.callback_p = flowEventCallback;
     flowFuncInfo.eventInfo.user_p = NULL;

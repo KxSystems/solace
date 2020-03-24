@@ -100,10 +100,24 @@ K endpointtopicunsubscribe_solace(K options, K provFlags, K topic);
 /**
  * Send data over Solace, using direct messages
  *
- * @param topic Should be a symbol. The Topic to send data to.
- * @param data Can be a symbol of character array. The payload of the message.
+ * @param topic Should be a string. The Topic to send data to.
+ * @param data Can be a symbol or string. The payload of the message.
  */
 K senddirect_solace(K topic, K data);
+
+/**
+ * Subscribe to a direct message subscription 
+ *
+ * @param topic Should be a string. The Topic to unsubscribe from
+ */
+K subscribedirect_solace(K topic);
+
+/**
+ * Unsubscribe from a direct message subscription 
+ *
+ * @param topic Should be a string. The Topic to unsubscribe from
+ */
+K unsubscribedirect_solace(K topic);
 
 /**
  * Send data over Solace, using persistent/guaranteed messages

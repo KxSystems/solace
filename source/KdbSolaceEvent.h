@@ -47,6 +47,7 @@ struct KdbSolaceEvent
         KdbSolaceEventGuarSubMsg*       _subMsg;
         KdbSolaceEventFlowDetail*       _flow;
         KdbSolaceEventSessionDetail*    _session;
+        solClient_opaqueMsg_pt          _directMsg;
     } _event; 
 };
 
