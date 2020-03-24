@@ -78,6 +78,7 @@ static solClient_opaqueContext_pt context = NULL;
 static int CALLBACK_PIPE[2];
 static std::string KDB_SESSION_EVENT_CALLBACK_FUNC;
 static std::string KDB_FLOW_EVENT_CALLBACK_FUNC;
+static std::string KDB_DIRECT_MSG_CALLBACK_FUNC;
 
 enum KdbSolaceEndpointType
 {
@@ -178,16 +179,15 @@ K kdbCallback(I d)
         {
             if (!KDB_SESSION_EVENT_CALLBACK_FUNC.empty())
             {
-                const char* kdbFunc = KDB_SESSION_EVENT_CALLBACK_FUNC.c_str();
                 K eventtype = ki(msgAndSource._event._session->_eventType);
                 K responsecode = ki(msgAndSource._event._session->_responseCode);
                 K eventinfo = kp((char*)msgAndSource._event._session->_eventInfo.c_str()); 
-                K result = k(0, (char*)kdbFunc, eventtype, responsecode, eventinfo, (K)0);
+                K result = k(0, (char*)KDB_SESSION_EVENT_CALLBACK_FUNC.c_str(), eventtype, responsecode, eventinfo, (K)0);
                 if(-128 == result->t)
                 {
                     printf("[%ld] Solace not able to call kdb function %s with received data (eventtype:%d responsecode:%d eventinfo:%s)\n", 
                                     THREAD_ID, 
-                                    kdbFunc,
+                                    KDB_SESSION_EVENT_CALLBACK_FUNC.c_str(),
                                     msgAndSource._event._session->_eventType,
                                     msgAndSource._event._session->_responseCode,
                                     msgAndSource._event._session->_eventInfo.c_str());
@@ -200,16 +200,15 @@ K kdbCallback(I d)
         {
             if (!KDB_FLOW_EVENT_CALLBACK_FUNC.empty())
             {
-                const char* kdbFunc = KDB_FLOW_EVENT_CALLBACK_FUNC.c_str();
                 K eventtype = ki(msgAndSource._event._flow->_eventType);
                 K responsecode = ki(msgAndSource._event._flow->_responseCode);
                 K eventinfo = kp((char*)msgAndSource._event._flow->_eventInfo.c_str());
                 K destType = ki(msgAndSource._event._flow->_destType);
                 K destName = kp((char*)msgAndSource._event._flow->_destName.c_str());
-                K result = k(0, (char*)kdbFunc, eventtype, responsecode, eventinfo, destType, destName, (K)0);
+                K result = k(0, (char*)KDB_FLOW_EVENT_CALLBACK_FUNC.c_str(), eventtype, responsecode, eventinfo, destType, destName, (K)0);
                 if(-128 == result->t)
                 {
-                    printf("[%ld] Solace not able to call kdb function %s\n", THREAD_ID, kdbFunc); 
+                    printf("[%ld] Solace not able to call kdb function %s\n", THREAD_ID, KDB_FLOW_EVENT_CALLBACK_FUNC.c_str()); 
                 }
             }
             delete (msgAndSource._event._flow);
@@ -217,12 +216,23 @@ K kdbCallback(I d)
         }
         else if (msgAndSource._type == DIRECT_MSG_EVENT)
         {
-            //TODO
-            printf("!!!! TODO KDB CALLBACK GOT DIRECT_MSG_EVENT\n");
             solClient_opaqueMsg_pt msg = msgAndSource._event._directMsg;
+            if (KDB_DIRECT_MSG_CALLBACK_FUNC.empty())
+            {
+                solClient_msg_free(&msg);
+                return (K)0;
+            }
+            const char* destination = "";
             solClient_destination_t msgDest;
             if (solClient_msg_getDestination(msg,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
-                printf("!!! destination %s\n",msgDest.dest);
+                destination = msgDest.dest;
+            void* dataPtr = NULL;
+            solClient_uint32_t dataSize = 0;
+            solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize);
+            K payload = ktn(KG, dataSize);
+            memcpy(payload->G0, dataPtr, dataSize);
+            // TODO add further into the kdb callback, like destination, isRedelivered, getDiscardIndication
+            K result = k(0,(char*)KDB_DIRECT_MSG_CALLBACK_FUNC.c_str(),payload,(K)0);
             solClient_msg_free(&msg);
             return (K)0;
         }
@@ -809,6 +819,15 @@ K senddirect_solace(K topic, K data)
         printf("[%ld] Solace send error %d: %s\n",THREAD_ID,retCode,solClient_returnCodeToString(retCode));
         return ki(retCode);
     }
+    return ki(SOLCLIENT_OK);
+}
+
+K callbackdirect_solace(K func)
+{
+    CHECK_PARAM_STRING_TYPE(func,"callbackdirect_solace");
+    char cbStr[getStringSize(func)];
+    setString(cbStr,func,sizeof(cbStr));
+    KDB_DIRECT_MSG_CALLBACK_FUNC.assign(cbStr);
     return ki(SOLCLIENT_OK);
 }
 

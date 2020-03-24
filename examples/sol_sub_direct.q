@@ -10,6 +10,7 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$f
 .solace.setsessioncallback_solace:`libdeltasolace 2:(`setsessioncallback_solace;1)
 .solace.setflowcallback_solace:`libdeltasolace 2:(`setflowcallback_solace;1)
 .solace.init_solace:`libdeltasolace 2:(`init_solace;1)
+.solace.callbackdirect_solace:`libdeltasolace 2:(`callbackdirect_solace;1)
 .solace.subscribedirect_solace:`libdeltasolace 2:(`subscribedirect_solace;1)
 .solace.unsubscribedirect_solace:`libdeltasolace 2:(`unsubscribedirect_solace;1)
 .solace.destroy_solace:`libdeltasolace 2:(`destroy_solace;1)
@@ -26,7 +27,8 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 .solace.init_solace[soloptions]
 
 / receiving and acknowledging a persistent msg (TODO loop over times when >1 msg)
-subUpdate:{[r] 0N!("RECEIVED MSG: ####";r)};
+subUpdate:{[r] 0N!("RECEIVED MSG: ####";`char$r)};
+.solace.callbackdirect_solace[`subUpdate]
 .solace.subscribedirect_solace[`$first params`topic]
 
 / dont disconnect or quit, in order to receive any messages
