@@ -231,8 +231,21 @@ K kdbCallback(I d)
             solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize);
             K payload = ktn(KG, dataSize);
             memcpy(payload->G0, dataPtr, dataSize);
-            // TODO add further into the kdb callback, like destination, isRedelivered, getDiscardIndication
-            K result = k(0,(char*)KDB_DIRECT_MSG_CALLBACK_FUNC.c_str(),payload,(K)0);
+
+            solClient_bool_t redelivered = solClient_msg_isRedelivered(msg);
+            solClient_bool_t discarded = solClient_msg_isDiscardIndication(msg);
+            solClient_int64_t sendTime = 0;
+            solClient_msg_getSenderTimestamp(msg,&sendTime);
+            if (sendTime>0)
+                sendTime=(sendTime*1000000l)-(946684800l*1000000000l);
+
+            K keys = ktn(KS,3);
+            kS(keys)[0]=ss((char*)"isRedeliv");
+            kS(keys)[1]=ss((char*)"isDiscard");
+            kS(keys)[2]=ss((char*)"sendTime");
+            K vals = knk(3,kb(redelivered),kb(discarded),ktj(-KP,sendTime));
+            K dict = xD(keys,vals);
+            K result = k(0,(char*)KDB_DIRECT_MSG_CALLBACK_FUNC.c_str(),ks((char*)destination),payload,dict,(K)0);
             solClient_msg_free(&msg);
             return (K)0;
         }
@@ -248,17 +261,16 @@ K kdbCallback(I d)
             return (K)0;
         }
         
-        K rows = ktn(KS,0);
-        js(&rows,ss((char*)"subsType"));
-        js(&rows,ss((char*)"topicName"));
-        js(&rows,ss((char*)"replyType"));
-        js(&rows,ss((char*)"replyName"));
-        js(&rows,ss((char*)"correlationId"));
-        js(&rows,ss((char*)"flowPtr"));
-        js(&rows,ss((char*)"msgId"));
-        js(&rows,ss((char*)"stringData"));
-
-        K dict = xD(rows, msgAndSource._event._subMsg->_vals);
+        K keys = ktn(KS,8);
+        kS(keys)[0]=ss((char*)"subsType");
+        kS(keys)[1]=ss((char*)"topicName");
+        kS(keys)[2]=ss((char*)"replyType");
+        kS(keys)[3]=ss((char*)"replyName");
+        kS(keys)[4]=ss((char*)"correlationId");
+        kS(keys)[5]=ss((char*)"flowPtr");
+        kS(keys)[6]=ss((char*)"msgId");
+        kS(keys)[7]=ss((char*)"stringData");
+        K dict = xD(keys, msgAndSource._event._subMsg->_vals);
         K result = k(0, (char*)it->second.flowKdbCbFunc.c_str(), dict, (K)0);
         if(-128 == result->t)
             printf("[%ld] Solace not able to call kdb function %s with received data (destination:%s)\n", THREAD_ID, it->second.flowKdbCbFunc.c_str(), msgAndSource._event._subMsg->_destName.c_str());

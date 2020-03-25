@@ -27,7 +27,7 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 .solace.init_solace[soloptions]
 
 / receiving and acknowledging a persistent msg (TODO loop over times when >1 msg)
-subUpdate:{[r] 0N!("RECEIVED MSG: ####";`char$r)};
+subUpdate:{[x;y;z] 0N!("RECEIVED MSG: #### Destination ";x;" Payload ";`char$y;" Dict ";z)};
 .solace.callbackdirect_solace[`subUpdate]
 .solace.subscribedirect_solace[`$first params`topic]
 

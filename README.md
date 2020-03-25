@@ -144,10 +144,32 @@ K senddirect_solace(K topic, K data);
 
 Used for sending direct messages (Ref: https://docs.solace.com/PubSub-Basics/Direct-Messages.htm ). Each message will automatically be populated with a sender timestamp, message eliding eligibility enabled and dead message queue (DMQ) eligibility enabled.
 
-- topic: Topic to sending the message. Symbol type.
+- topic: Topic to sending the message. String type.
 - data: string/symbol/byte data, which forms the basis of the payload for the message
 
-#### Persistent Messaging
+```
+K callbackdirect_solace(K cb);
+```
+
+Registers a q function that should be called on receipt of messages from subscriptions.
+
+* cb: A q function that takes 3 parameters. The function should accept 3 parameters, symbol destination, byte list for payload and a dictionary of msg values
+
+```
+K subscribedirect_solace(K topic);
+```
+
+Subscribes to a topic for direct messages. Solace format wildcards can be used in the topic subscription value.
+
+* topic: Topic to subscribe to. String type.
+
+```
+K unsubscribedirect_solace(K topic);
+```
+
+As above, but unsubscribes from existing subscription
+
+### Persistent/Garanteed Messaging
 
 ```
 K sendpersistent_solace(K type, K dest, K replyType, K replydest, K data, K correlationId);

@@ -8,7 +8,7 @@ Place the libdeltasolace.so (from your release) into the same directory as your 
 
 ## Running Examples
 
-### Utility Example
+### Utilities
 
 #### sol_capabilities.q
 
@@ -28,7 +28,7 @@ Params:
 - -pass - password
 - -opt - Solace capability name 
 
-### EndPoint Examples
+### EndPoint Interaction
 
 Creates an queue on the Solace broker (permission permitting)
 
@@ -85,11 +85,11 @@ Params:
 - -queue - name of the exiting queue endpoint to alter
 - -topic - name of the topic to add to the existing queue
 
-### Pub/Sub Examples
+### Pub/Sub With Direct Msgs 
 
 #### sol_pub_direct.q
 
-Sends a direct message.
+Sends a direct message via a topic
 
 Example:
 
@@ -105,6 +105,26 @@ Params:
 - -pass - password
 - -topic - topic name to publish the message to
 - -data - message payload to send
+
+#### sol_sub_direct.q
+
+Subscribes to a topic for direct msgs 
+
+Example:
+
+```c
+q sol_sub_direct.q -host 192.168.65.2:55111 -topic "Q/>"
+```
+
+Params:
+
+- -host - Broker hostname
+- -vpn - VPN name
+- -user - username
+- -pass - password
+- -topic - topic name to subscribe to (Solace wildcard format supported)
+
+### Pub/Sub With Guaranteed Msgs
 
 
 #### sol_pub_persist.q

@@ -106,9 +106,11 @@ K endpointtopicunsubscribe_solace(K options, K provFlags, K topic);
 K senddirect_solace(K topic, K data);
 
 /**
- * TODO
+ * Sets the KDB+ function that should be called on receipt of each direct msg created via
+ * subscribedirect_solace. The function should accept 3 params, symbol destination, byte list for
+ * payload and a dict of msg values
  * @param cb Can be a symbol or string, which is the name of the q function to call on receipt of
- * each direct message, created via the seperate subscription method  
+ * each direct message
  */
 K callbackdirect_solace(K cb);
 
