@@ -30,7 +30,7 @@ q:`$"queue"
 .solace.init_solace[soloptions]
 
 / receiving and acknowledging a persistent msg (TODO loop over times when >1 msg)
-subUpdate:{[r] 0N!("RECEIVED MSG: ####";r);.solace.sendack_solace[first r`flowPtr;first r`msgId]};
+subUpdate:{[r] 0N!("RECEIVED MSG: ####";r;" payload: ";`char$first r`payload);.solace.sendack_solace[first r`flowPtr;first r`msgId]};
 .solace.subscribepersistent_solace[.solace.endpoint_type;`$first params`destname;`;`subUpdate]
 
 / dont disconnect or quit, in order to receive any messages

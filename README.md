@@ -196,7 +196,7 @@ The topicname symbol is optional. When binding to a Topic endpoint, the Topic ma
 
 The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
 
-subsType,topicName,replyType,replyName,correlationId,flowPtr,msgId,stringData
+subsType,topicName,replyType,replyName,correlationId,flowPtr,msgId,payload
 
 Each value in the dictionary consists of a list of values (more than 1 message can be received on a callback)
 

@@ -128,16 +128,17 @@ static void timerCbFunc(solClient_opaqueContext_pt opaqueContext_p, void* user_p
 
 int addMsgToList(K* batch, int subsType, const char* topicName, int replyType, const char* replyName, const char* correlationId, solClient_opaqueFlow_pt flowPtr, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
 {
-   ja(&(((K*)(*batch)->G0)[0]), &subsType);
-   jk(&(((K*)(*batch)->G0)[1]), kp((char*)topicName));
-   ja(&(((K*)(*batch)->G0)[2]), &replyType);
-   jk(&(((K*)(*batch)->G0)[3]), kp((char*)replyName));
-   jk(&(((K*)(*batch)->G0)[4]), kp((char*)correlationId));
-   ja(&(((K*)(*batch)->G0)[5]), &flowPtr);
-   ja(&(((K*)(*batch)->G0)[6]), &msgId);
-   jk(&(((K*)(*batch)->G0)[7]), kpn((char*)data,dataSize));
-
-   return (((K*)(*batch)->G0)[0])->n;
+    ja(&(((K*)(*batch)->G0)[0]), &subsType);
+    jk(&(((K*)(*batch)->G0)[1]), kp((char*)topicName));
+    ja(&(((K*)(*batch)->G0)[2]), &replyType);
+    jk(&(((K*)(*batch)->G0)[3]), kp((char*)replyName));
+    jk(&(((K*)(*batch)->G0)[4]), kp((char*)correlationId));
+    ja(&(((K*)(*batch)->G0)[5]), &flowPtr);
+    ja(&(((K*)(*batch)->G0)[6]), &msgId);
+    K payload = ktn(KG, dataSize);
+    memcpy(payload->G0, data, dataSize);
+    jk(&(((K*)(*batch)->G0)[7]), payload);
+    return (((K*)(*batch)->G0)[0])->n;
 }
 
 void setReplyTo(K replyType, K replydest, solClient_opaqueMsg_pt msg_p)
@@ -262,7 +263,7 @@ K kdbCallback(I d)
         kS(keys)[4]=ss((char*)"correlationId");
         kS(keys)[5]=ss((char*)"flowPtr");
         kS(keys)[6]=ss((char*)"msgId");
-        kS(keys)[7]=ss((char*)"stringData");
+        kS(keys)[7]=ss((char*)"payload");
         K dict = xD(keys, msgAndSource._event._subMsg->_vals);
         K result = k(0, (char*)it->second.flowKdbCbFunc.c_str(), dict, (K)0);
         if(-128 == result->t)
