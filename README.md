@@ -142,7 +142,7 @@ Removes a Topic subscription to an existing endpoint. Can be used with queues or
 K senddirect_solace(K topic, K data);
 ```
 
-Used for sending direct messages (Ref: https://docs.solace.com/PubSub-Basics/Direct-Messages.htm ). Each message will automatically be populated with a sender timestamp, message eliding eligibility enabled and dead message queue (DMQ) eligibility enabled.
+Used for sending direct messages (Ref: https://docs.solace.com/PubSub-Basics/Direct-Messages.htm ). Each message will automatically be populated with message eliding eligibility enabled and dead message queue (DMQ) eligibility enabled.
 
 - topic: Topic to sending the message. String type.
 - data: string/symbol/byte data, which forms the basis of the payload for the message

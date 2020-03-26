@@ -20,13 +20,6 @@
 #define CHECK_PARAM_DATA_TYPE(x,z) {if (x->t != KG && x->t != -KS && x->t != KC) return krr((S)"Function " #z " called with incorrect param type for " #x "");}
 #define CHECK_PARAM_DICT_SYMS(x,z) {if (x->t != 99) return krr((S)"Function " #z " called with incorrect dict param type"); if ((kK(x)[0])->n>0 && (kK(x)[0])->t != 11 && (kK(x)[1])->t != 11) return krr((S)"Function " #z " expecting symbols in provided dict");}
 
-solClient_int64_t getMillisSinceEpoch()
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return ( (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000 );
-}
-
 int getDataSize(K d)
 {
     return (d->t == -KS) ? strlen(d->s) : d->n;
@@ -822,7 +815,6 @@ K senddirect_solace(K topic, K data)
     solClient_msg_setDestination ( msg_p, &destination, sizeof ( destination ) );
     solClient_msg_setElidingEligible( msg_p, 1); // set to true
     solClient_msg_setDMQEligible( msg_p, 1); // set to true
-    solClient_msg_setSenderTimestamp (msg_p, getMillisSinceEpoch());
     solClient_msg_setBinaryAttachment ( msg_p, getData(data), getDataSize(data));
     solClient_returnCode_t retCode = solClient_session_sendMsg ( session_p, msg_p ); 
     solClient_msg_free ( &msg_p );
@@ -883,7 +875,6 @@ K sendpersistent_solace(K type, K dest, K replyType, K replydest, K data, K corr
 
     solClient_msg_setDeliveryMode ( msg_p, SOLCLIENT_DELIVERY_MODE_PERSISTENT );
     solClient_msg_setExpiration (msg_p, 0);
-    solClient_msg_setSenderTimestamp (msg_p, getMillisSinceEpoch());
     if (correlationId != NULL)
     {
         char correlationIdStr[getStringSize(correlationId)];

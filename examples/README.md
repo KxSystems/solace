@@ -89,7 +89,7 @@ Params:
 
 #### sol_pub_direct.q
 
-Sends a direct message via a topic
+Sends a direct message via a topic (also has an example of using session properties to enable send timestamps on each msg)
 
 Example:
 

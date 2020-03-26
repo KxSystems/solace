@@ -2,7 +2,7 @@ default_nm:`host`vpn`user`pass`topic`data
 default_val:(enlist "host.docker.internal";enlist "default";enlist "admin";enlist "admin";enlist "Q/test";enlist "kdb data")
 params:.Q.def[default_nm!default_val].Q.opt .z.x
 
-soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$first params`host;`$first params`vpn;`$first params`user;`$first params`pass);
+soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD`SESSION_SEND_TIMESTAMP!(`$first params`host;`$first params`vpn;`$first params`user;`$first params`pass;`$"1");
 
 / initialise the solace api function
 .solace.setsessioncallback_solace:`libdeltasolace 2:(`setsessioncallback_solace;1)
