@@ -88,7 +88,7 @@ K destroyendpoint_solace(K options, K provFlags);
  * Ref: https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#a75159f729405cb331e64466ac9cd7f41
  * @param options Dictionary of properties (symbol types) for solClient_session_endpointTopicSubscribe
  * @param provFlags Integer defining provision flags for the endpoint as defined in solClient_session_endpointTopicSubscribe
- * @topic Symbol or string that defines the topic in which to add a subscription
+ * @param topic Symbol or string that defines the topic in which to add a subscription
  */
 K endpointtopicsubscribe_solace(K options, K provFlags, K topic);
 
@@ -106,9 +106,23 @@ K endpointtopicunsubscribe_solace(K options, K provFlags, K topic);
 K senddirect_solace(K topic, K data);
 
 /**
+ * Sends a topic request message. This expects an end-to-end reply from the client that receives the message
+ * 
+ * @param topic Should be a string. The Topic to send data to.
+ * @param data Can be a symbol or string or byte array. The payload of the message.
+ * @param timeout Integer type representing milliseconds to wait/block
+ * @return Returns a byte list of message received, containing the payload. Otherwise will be an int
+ * to indicate the return code. If value 7, the reply wasnt received. If value 2
+ * then the reply is currently in progress
+ */
+ K senddirectrequest_solace(K topic, K data, K timeout);
+
+/**
  * Sets the KDB+ function that should be called on receipt of each direct msg created via
  * subscribedirect_solace. The function should accept 3 params, symbol destination, byte list for
- * payload and a dict of msg values
+ * payload and a dict of msg values. If the dict contains a value of true for the key 'isRequest',
+ * the sender is request a reply. In order to reply, return either a symbol/string or byte list
+ * for the reply msg contents.
  * @param cb Can be a symbol or string, which is the name of the q function to call on receipt of
  * each direct message
  */

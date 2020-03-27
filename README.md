@@ -148,10 +148,16 @@ Used for sending direct messages (Ref: https://docs.solace.com/PubSub-Basics/Dir
 - data: string/symbol/byte data, which forms the basis of the payload for the message
 
 ```
+ K senddirectrequest_solace(K topic, K data, K timeout);
+```
+
+Used for sending direct messages that require a reply. Works as per senddirect_solace with an extra integer timeout param that indicate the millisecons to block/wait. Returns a byte list of message received, containing the payload. Otherwise will be an int to indicate the return code. If value 7, the reply wasnt received. If value 2 then the reply is currently in progress
+
+```
 K callbackdirect_solace(K cb);
 ```
 
-Registers a q function that should be called on receipt of messages from subscriptions.
+Registers a q function that should be called on receipt of messages from subscriptions. If the dict contains a value of true for the key 'isRequest', the function should return with the response message contents (type byte list) as this is an indication that the sender is requesting a reply.
 
 * cb: A q function that takes 3 parameters. The function should accept 3 parameters, symbol destination, byte list for payload and a dictionary of msg values
 
