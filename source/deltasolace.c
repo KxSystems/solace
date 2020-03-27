@@ -220,6 +220,8 @@ K kdbCallback(I d)
             solClient_destination_t msgDest;
             if (solClient_msg_getDestination(msg,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
                 destination = msgDest.dest;
+            solClient_destination_t replyDest;
+            bool isRequest = (solClient_msg_getReplyTo(msg,&replyDest,sizeof(replyDest)) == SOLCLIENT_OK);
             void* dataPtr = NULL;
             solClient_uint32_t dataSize = 0;
             solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize);
@@ -233,13 +235,22 @@ K kdbCallback(I d)
             if (sendTime>0)
                 sendTime=(sendTime*1000000l)-(946684800l*1000000000l);
 
-            K keys = ktn(KS,3);
+            K keys = ktn(KS,4);
             kS(keys)[0]=ss((char*)"isRedeliv");
             kS(keys)[1]=ss((char*)"isDiscard");
-            kS(keys)[2]=ss((char*)"sendTime");
-            K vals = knk(3,kb(redelivered),kb(discarded),ktj(-KP,sendTime));
+            kS(keys)[2]=ss((char*)"isRequest");
+            kS(keys)[3]=ss((char*)"sendTime");
+            K vals = knk(4,kb(redelivered),kb(discarded),kb(isRequest),ktj(-KP,sendTime));
             K dict = xD(keys,vals);
-            K result = k(0,(char*)KDB_DIRECT_MSG_CALLBACK_FUNC.c_str(),ks((char*)destination),payload,dict,(K)0);
+            K replyK = k(0,(char*)KDB_DIRECT_MSG_CALLBACK_FUNC.c_str(),ks((char*)destination),payload,dict,(K)0);
+            if ((isRequest && replyK!=NULL) && (replyK->t == KG || replyK->t == -KS || replyK->t == KC))
+            {
+                solClient_opaqueMsg_pt replyMsg = NULL;
+                solClient_msg_alloc (&replyMsg);
+                solClient_msg_setBinaryAttachment ( replyMsg, getData(replyK), getDataSize(replyK));
+                if (solClient_session_sendReply(session_p,msg,replyMsg) != SOLCLIENT_OK)
+                    solClient_msg_free(&replyMsg);
+            }
             solClient_msg_free(&msg);
             return (K)0;
         }
