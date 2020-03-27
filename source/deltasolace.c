@@ -810,13 +810,8 @@ K endpointtopicunsubscribe_solace(K options, K provFlags, K topic)
     return ki(SOLCLIENT_OK);
 }
 
-K senddirect_solace(K topic, K data)
+static solClient_opaqueMsg_pt createDirectMsg(K topic,K data)
 {
-    CHECK_SESSION_CREATED;
-    CHECK_PARAM_TYPE(topic,-KS,"senddirect_solace");
-    CHECK_PARAM_DATA_TYPE(data,"senddirect_solace");
-    
-    /* Set the destination. */
     solClient_destination_t destination;
     destination.destType = SOLCLIENT_TOPIC_DESTINATION;
     destination.dest = topic->s;
@@ -828,14 +823,18 @@ K senddirect_solace(K topic, K data)
     solClient_msg_setElidingEligible( msg_p, 1); // set to true
     solClient_msg_setDMQEligible( msg_p, 1); // set to true
     solClient_msg_setBinaryAttachment ( msg_p, getData(data), getDataSize(data));
+    return msg_p;
+}
+
+K senddirect_solace(K topic, K data)
+{
+    CHECK_SESSION_CREATED;
+    CHECK_PARAM_TYPE(topic,-KS,"senddirect_solace");
+    CHECK_PARAM_DATA_TYPE(data,"senddirect_solace");
+    solClient_opaqueMsg_pt msg_p = createDirectMsg(topic,data);
     solClient_returnCode_t retCode = solClient_session_sendMsg ( session_p, msg_p ); 
     solClient_msg_free ( &msg_p );
-    if (retCode != SOLCLIENT_OK)
-    {
-        printf("[%ld] Solace send error %d: %s\n",THREAD_ID,retCode,solClient_returnCodeToString(retCode));
-        return ki(retCode);
-    }
-    return ki(SOLCLIENT_OK);
+    return ki(retCode);
 }
 
  K senddirectrequest_solace(K topic, K data, K timeout)
@@ -844,18 +843,7 @@ K senddirect_solace(K topic, K data)
     CHECK_PARAM_TYPE(topic,-KS,"senddirectrequest_solace");
     CHECK_PARAM_DATA_TYPE(data,"senddirectrequest_solace");
     CHECK_PARAM_TYPE(timeout,-KI,"senddirectrequest_solace");
-    /* Set the destination. */
-    solClient_destination_t destination;
-    destination.destType = SOLCLIENT_TOPIC_DESTINATION;
-    destination.dest = topic->s;
-
-    solClient_opaqueMsg_pt msg_p = NULL;
-    solClient_msg_alloc ( &msg_p );
-    solClient_msg_setDeliveryMode ( msg_p, SOLCLIENT_DELIVERY_MODE_DIRECT );
-    solClient_msg_setDestination ( msg_p, &destination, sizeof ( destination ) );
-    solClient_msg_setElidingEligible( msg_p, 1); // set to true
-    solClient_msg_setDMQEligible( msg_p, 1); // set to true
-    solClient_msg_setBinaryAttachment ( msg_p, getData(data), getDataSize(data));
+    solClient_opaqueMsg_pt msg_p = createDirectMsg(topic,data);
     solClient_opaqueMsg_pt replyMsg = NULL;
     solClient_returnCode_t retCode = solClient_session_sendRequest ( session_p, msg_p, &replyMsg, timeout->i); 
     solClient_msg_free ( &msg_p );
