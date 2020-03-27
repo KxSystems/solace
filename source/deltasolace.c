@@ -838,6 +838,40 @@ K senddirect_solace(K topic, K data)
     return ki(SOLCLIENT_OK);
 }
 
+ K senddirectrequest_solace(K topic, K data, K timeout)
+ {
+    CHECK_SESSION_CREATED;
+    CHECK_PARAM_TYPE(topic,-KS,"senddirectrequest_solace");
+    CHECK_PARAM_DATA_TYPE(data,"senddirectrequest_solace");
+    CHECK_PARAM_TYPE(timeout,-KI,"senddirectrequest_solace");
+    /* Set the destination. */
+    solClient_destination_t destination;
+    destination.destType = SOLCLIENT_TOPIC_DESTINATION;
+    destination.dest = topic->s;
+
+    solClient_opaqueMsg_pt msg_p = NULL;
+    solClient_msg_alloc ( &msg_p );
+    solClient_msg_setDeliveryMode ( msg_p, SOLCLIENT_DELIVERY_MODE_DIRECT );
+    solClient_msg_setDestination ( msg_p, &destination, sizeof ( destination ) );
+    solClient_msg_setElidingEligible( msg_p, 1); // set to true
+    solClient_msg_setDMQEligible( msg_p, 1); // set to true
+    solClient_msg_setBinaryAttachment ( msg_p, getData(data), getDataSize(data));
+    solClient_opaqueMsg_pt replyMsg = NULL;
+    solClient_returnCode_t retCode = solClient_session_sendRequest ( session_p, msg_p, &replyMsg, timeout->i); 
+    solClient_msg_free ( &msg_p );
+    if (retCode == SOLCLIENT_OK)
+    { 
+        void* dataPtr = NULL;
+        solClient_uint32_t dataSize = 0;
+        solClient_msg_getBinaryAttachmentPtr(replyMsg, &dataPtr, &dataSize);
+        K payload = ktn(KG, dataSize);
+        memcpy(payload->G0, dataPtr, dataSize);
+        solClient_msg_free(&replyMsg);
+        return payload;
+    }
+    return ki(retCode);
+ }
+
 K callbackdirect_solace(K func)
 {
     CHECK_PARAM_STRING_TYPE(func,"callbackdirect_solace");

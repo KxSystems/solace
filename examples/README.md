@@ -124,6 +124,14 @@ Params:
 - -pass - password
 - -topic - topic name to subscribe to (Solace wildcard format supported)
 
+#### sol_pub_directrequestor.q
+
+As per sol_pub_direct.q, but adds a request for a reply as part of the published message
+
+#### sol_sub_directreplier.q
+
+As per sol_sub_direct.q, but replies to any message received
+
 ### Pub/Sub With Guaranteed Msgs
 
 

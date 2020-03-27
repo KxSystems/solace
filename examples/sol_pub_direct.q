@@ -22,7 +22,7 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 / perform solace actions
 .solace.init_solace[soloptions]
 
-/ sending a persistent message to a queue
+/ sending a direct message to a topic
 .solace.senddirect_solace[`$first params`topic;`$first params`data]
 
 .solace.destroy_solace[1i]
