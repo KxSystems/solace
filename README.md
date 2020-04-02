@@ -151,7 +151,7 @@ Used for sending direct messages (Ref: https://docs.solace.com/PubSub-Basics/Dir
  K senddirectrequest_solace(K topic, K data, K timeout);
 ```
 
-Used for sending direct messages that require a reply. Works as per senddirect_solace with an extra integer timeout param that indicate the millisecons to block/wait. Returns a byte list of message received, containing the payload. Otherwise will be an int to indicate the return code. If value 7, the reply wasnt received. If value 2 then the reply is currently in progress
+Used for sending direct messages that require a sync reply. Works as per senddirect_solace with an extra integer timeout param that indicate the millisecons to block/wait (must be greater than zero). Returns a byte list of message received, containing the payload. Otherwise will be an int to indicate the return code. If value 7, the reply wasnt received. 
 
 ```
 K callbackdirect_solace(K cb);

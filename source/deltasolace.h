@@ -110,10 +110,9 @@ K senddirect_solace(K topic, K data);
  * 
  * @param topic Should be a string. The Topic to send data to.
  * @param data Can be a symbol or string or byte array. The payload of the message.
- * @param timeout Integer type representing milliseconds to wait/block
+ * @param timeout Integer type representing milliseconds to wait/block, must be greater than 0
  * @return Returns a byte list of message received, containing the payload. Otherwise will be an int
- * to indicate the return code. If value 7, the reply wasnt received. If value 2
- * then the reply is currently in progress
+ * to indicate the return code. If value 7, the reply wasnt received. 
  */
  K senddirectrequest_solace(K topic, K data, K timeout);
 
