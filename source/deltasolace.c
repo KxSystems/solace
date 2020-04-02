@@ -843,6 +843,8 @@ K senddirect_solace(K topic, K data)
     CHECK_PARAM_TYPE(topic,-KS,"senddirectrequest_solace");
     CHECK_PARAM_DATA_TYPE(data,"senddirectrequest_solace");
     CHECK_PARAM_TYPE(timeout,-KI,"senddirectrequest_solace");
+    if (timeout->i <= 0)
+        krr((char*)"senddirectrequest_solace must be provided with timeout greater than zero");
     solClient_opaqueMsg_pt msg_p = createDirectMsg(topic,data);
     solClient_opaqueMsg_pt replyMsg = NULL;
     solClient_returnCode_t retCode = solClient_session_sendRequest ( session_p, msg_p, &replyMsg, timeout->i); 
