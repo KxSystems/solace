@@ -1060,18 +1060,11 @@ K sendack_solace(K flow, K msgid)
     return ki(retCode);
 }
 
-K unsubscribepersistent_solace(K type, K endpointname, K topicname)
+K unsubscribepersistent_solace(K endpointname)
 {
     CHECK_PARAM_TYPE(endpointname,-KS,"unsubscribepersistent_solace");
-    CHECK_PARAM_TYPE(topicname,-KS,"unsubscribepersistent_solace");
-    CHECK_PARAM_TYPE(type,-KI,"unsubscribepersistent_solace");
     
-    const char* subname = NULL;
-    if ((type->i == KDB_SOLACE_ENDPOINT_TYPE_QUEUE) || (type->i == KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE))
-        subname = endpointname->s;
-    else
-        subname = topicname->s;
-
+    const char* subname =  endpointname->s;
     std::map<std::string,GurananteedSubInfo>::iterator it;
     it = GUARANTEED_SUB_INFO.find(subname);
     if (it == GUARANTEED_SUB_INFO.end())
@@ -1079,7 +1072,6 @@ K unsubscribepersistent_solace(K type, K endpointname, K topicname)
         printf("[%ld] Solace unsubscribe for subscription %s that doesnt exist\n", THREAD_ID, subname);
         return krr((S)"Solace unsubscribe for subscription that doesnt exist");
     }
-
     solClient_opaqueFlow_pt flow_pt = it->second.flow_pt;
     solClient_returnCode_t retCode = solClient_flow_destroy(&flow_pt);
     if (retCode != SOLCLIENT_OK)
