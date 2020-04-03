@@ -88,45 +88,48 @@ struct GurananteedSubInfo
 };
 static std::map<std::string, GurananteedSubInfo> GUARANTEED_SUB_INFO;
 
-struct TimerPayload 
-{
-    std::string                     dest;
-    solClient_context_timerId_t     destTimer;
-};
-
 typedef std::map<std::string, K> batchInfoMap;
 static batchInfoMap BATCH_PER_DESTINATION;
 
-static void timerCbFunc(solClient_opaqueContext_pt opaqueContext_p, void* user_p)
+static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, solClient_fd_t fd, solClient_fdEvent_t events, void *user_p)
 {
-    TimerPayload* payload = (static_cast<TimerPayload*>(user_p));
-    // lookup batch info and retrieve batch for this destination
-    batchInfoMap::iterator find = BATCH_PER_DESTINATION.find(payload->dest);
-    if ((find != BATCH_PER_DESTINATION.end()) && (NULL != find->second))
+    batchInfoMap::iterator itr = BATCH_PER_DESTINATION.begin();
+    while (itr!=BATCH_PER_DESTINATION.end())
     {
+        batchInfoMap::iterator currentDest = itr;
+        ++itr;
         // attempt to send the batch over the pipe
         KdbSolaceEvent msgAndSource;
         msgAndSource._type = GUARANTEED_MSG_EVENT;
         msgAndSource._event._subMsg = new KdbSolaceEventGuarSubMsg;
-        msgAndSource._event._subMsg->_destName.assign(payload->dest);
-        msgAndSource._event._subMsg->_vals = (find->second);
+        msgAndSource._event._subMsg->_destName.assign(currentDest->first);
+        msgAndSource._event._subMsg->_vals = (currentDest->second);
         int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
         if (numWritten != sizeof(msgAndSource))
         {
-            msgAndSource._event._subMsg->_vals = NULL;
             delete (msgAndSource._event._subMsg);
-            // allow timer to repeat, try again later
             return;
         }
+        BATCH_PER_DESTINATION.erase(currentDest);
     }
-    BATCH_PER_DESTINATION.erase(payload->dest);
-    solClient_returnCode_t rc;
-    if ((rc = solClient_context_stopTimer(context, &payload->destTimer)) != SOLCLIENT_OK)
-        printf("[%ld] Solace problem couldn't stop batch timer for destination %s.\n", THREAD_ID, payload->dest.c_str());
-    delete (payload);
+    solClient_context_unregisterForFdEvents(opaqueContext_p,fd,events);
 }
 
-int addMsgToList(K* batch, int subsType, const char* topicName, int replyType, const char* replyName, const char* correlationId, solClient_opaqueFlow_pt flowPtr, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
+K createBatch()
+{
+    K vals = knk(0);
+    jk(&(vals), ktn(KI, 0));//[0]
+    jk(&(vals), knk(0));    //[1]
+    jk(&(vals), ktn(KI,0)); //[2]
+    jk(&(vals), knk(0));    //[3]
+    jk(&(vals), knk(0));    //[4]
+    jk(&(vals), ktn(KJ,0)); //[5]
+    jk(&(vals), ktn(KJ,0)); //[6]
+    jk(&(vals), knk(0));    //[7]
+    return vals;
+}
+
+int addMsgToBatch(K* batch, int subsType, const char* topicName, int replyType, const char* replyName, const char* correlationId, solClient_opaqueFlow_pt flowPtr, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
 {
     ja(&(((K*)(*batch)->G0)[0]), &subsType);
     jk(&(((K*)(*batch)->G0)[1]), kp((char*)topicName));
@@ -346,21 +349,11 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
         printf("[%ld] Solace issue getting binary attachment from received message (id:%lld, type:%d, subscription:%s, msg destination:%s, msg destination type:%d)\n", THREAD_ID, msgId, destination.destType, tmpDest.c_str(), msgDestName, msgDest.destType);
         return SOLCLIENT_CALLBACK_OK;
     }
-    // lookup batch info and check if its batch is NULL 
-    batchInfoMap::iterator it = BATCH_PER_DESTINATION.find(tmpDest);
-    if (it == BATCH_PER_DESTINATION.end())
+    if(BATCH_PER_DESTINATION.empty())
     {
         // not baching - yet
-        K vals = knk(0);
-        jk(&(vals), ktn(KI, 0));//[0]
-        jk(&(vals), knk(0));    //[1]
-        jk(&(vals), ktn(KI,0)); //[2]
-        jk(&(vals), knk(0));    //[3]
-        jk(&(vals), knk(0));    //[4]
-        jk(&(vals), ktn(KJ,0)); //[5]
-        jk(&(vals), ktn(KJ,0)); //[6]
-        jk(&(vals), knk(0));    //[7]
-        addMsgToList(&(vals), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
+        K vals = createBatch();
+        addMsgToBatch(&(vals), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
         msgAndSource._event._subMsg->_vals = vals;
         int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
         if (numWritten != sizeof(msgAndSource))
@@ -368,20 +361,20 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
             // start batching now
             delete (msgAndSource._event._subMsg);
             BATCH_PER_DESTINATION.insert(std::make_pair(tmpDest, vals));
-            // start timer with topic and timer payload
-            TimerPayload* timerPayload = new TimerPayload;
-            timerPayload->dest.assign(tmpDest);
+
             solClient_returnCode_t rc;
-            if ((rc = solClient_context_startTimer(context, SOLCLIENT_CONTEXT_TIMER_REPEAT, 100, timerCbFunc, (void*)timerPayload, &timerPayload->destTimer)) != SOLCLIENT_OK)
-                printf("[%ld] Solace problem starting batch timer for destination %s.\n", THREAD_ID, tmpDest.c_str());
+            if ((rc = solClient_context_registerForFdEvents(context,CALLBACK_PIPE[1],SOLCLIENT_FD_EVENT_WRITE,socketWrittableCbFunc,NULL)) != SOLCLIENT_OK)
+                printf("[%ld] Solace problem create fd monitor\n", THREAD_ID);
         }
         return SOLCLIENT_CALLBACK_OK;
     }
     else
     {
-        // batching
+        batchInfoMap::iterator it = BATCH_PER_DESTINATION.find(tmpDest);
+        if (it == BATCH_PER_DESTINATION.end())
+            it = BATCH_PER_DESTINATION.insert(it,std::make_pair(tmpDest, createBatch()));
         // add current msg data and get batch size
-        int currentBatchSize = addMsgToList(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
+        int currentBatchSize = addMsgToBatch(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
         // if batch over batch size attempt to send.
         if (currentBatchSize >= 1000)
         {
