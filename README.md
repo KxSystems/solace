@@ -19,7 +19,6 @@ cmake source
 make
 ```
 
-
 ## Running
 
 ### Solace PubSub+ Event Broker 
@@ -208,12 +207,10 @@ subsType,topicName,replyType,replyName,correlationId,flowPtr,msgId,payload
 Each value in the dictionary consists of a list of values (more than 1 message can be received on a callback)
 
 ```
-K subscribetmp_solace(K type, K callbackFunction);
+K subscribetmp_solace(K callbackFunction);
 ```
 
-Creates and subscribes to a temp queue or topic. These do not remain when the client session ends. Only this client will be a consumer of the endpoint. Can typically be used as a reply-to endpoint for client communications.
-
-Type should be an int, 0 for topic, 1 for queue. 
+Creates and subscribes to a temp queue. These do not remain when the client session ends. Only this client will be a consumer of the endpoint. Can typically be used as a reply-to endpoint for client communications.
 
 Reference subscribepersistent_solace for details on the callbackFunction
 

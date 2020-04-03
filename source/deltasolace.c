@@ -921,10 +921,9 @@ K sendpersistent_solace(K dest, K replyType, K replydest, K data, K correlationI
     return ki(SOLCLIENT_OK);
 }
 
-K subscribetmp_solace(K type,  K callbackFunction)
+K subscribetmp_solace(K callbackFunction)
 { 
     CHECK_SESSION_CREATED;
-    CHECK_PARAM_TYPE(type,-KI,"subscribetmp_solace");
     CHECK_PARAM_TYPE(callbackFunction,-KS,"subscribetmp_solace");
 
     solClient_flow_createFuncInfo_t flowFuncInfo = SOLCLIENT_SESSION_CREATEFUNC_INITIALIZER;
@@ -939,12 +938,8 @@ K subscribetmp_solace(K type,  K callbackFunction)
     int propIndex = 0;
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_BLOCKING;
     flowProps[propIndex++] = SOLCLIENT_PROP_ENABLE_VAL;
-
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_ID;
-    if ((type->i == KDB_SOLACE_ENDPOINT_TYPE_QUEUE) || (type->i == KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE))
-        flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_QUEUE;
-    else
-        flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_TE;
+    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_QUEUE;
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_ACKMODE;
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_ACKMODE_CLIENT;
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_DURABLE;
