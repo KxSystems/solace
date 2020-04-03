@@ -91,6 +91,12 @@ Destroys the previously created session.
 ### Utility Functions
 
 ```
+K version_solace(K unused);
+```
+Returns a dictionary of Solace API version info. Useful for checking current deployment/build versions.
+
+
+```
 K iscapable_solace(K capabilityName);
 ```
 

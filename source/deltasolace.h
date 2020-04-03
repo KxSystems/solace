@@ -23,6 +23,11 @@ extern "C" {
 K init_solace(K options);
 
 /**
+ * Provides a dictionary of solace API version details. 
+ */
+K version_solace(K unused);
+
+/**
  * Should be called prior to init_solace. Provides notifications on session events
  * @param callbackFunction The kdb function to call for session events. The callback function will use 3 params - eventtype, responsecode, eventinfo.
  *  EventType is an int (https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#a6b74c1842f26be7bc10f6f4dd6995388 
