@@ -974,29 +974,16 @@ K subscribetmp_solace(K type,  K callbackFunction)
     return ks((char*)replyToAddr.dest);
 }
 
-K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunction)
+K subscribepersistent_solace(K endpointname, K callbackFunction)
 {
     CHECK_SESSION_CREATED;
     CHECK_PARAM_TYPE(endpointname,-KS,"subscribepersistent_solace");
     CHECK_PARAM_TYPE(callbackFunction,-KS,"subscribepersistent_solace");
-    CHECK_PARAM_TYPE(topicname,-KS,"subscribepersistent_solace");
-    CHECK_PARAM_TYPE(type,-KI,"subscribepersistent_solace");
 
-    if ((type->i == KDB_SOLACE_ENDPOINT_TYPE_QUEUE) || (type->i == KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE))
+    if (GUARANTEED_SUB_INFO.find(endpointname->s) != GUARANTEED_SUB_INFO.end())
     {
-        if (GUARANTEED_SUB_INFO.find(endpointname->s) != GUARANTEED_SUB_INFO.end())
-        {
-            printf("[%ld] Solace subscription not being created for %s, as existing subscription to queue exists\n",THREAD_ID,endpointname->s);
-            return ki(SOLCLIENT_OK);
-        }
-    }
-    else
-    {
-        if (GUARANTEED_SUB_INFO.find(topicname->s) != GUARANTEED_SUB_INFO.end())
-        {
-            printf("[%ld] Solace subscription not being created for %s, as existing subscription to topic exists\n",THREAD_ID,topicname->s);
-            return ki(SOLCLIENT_OK);
-        }
+        printf("[%ld] Solace subscription not being created for %s, as existing subscription to queue exists\n",THREAD_ID,endpointname->s);
+        return ki(SOLCLIENT_OK);
     }
 
     solClient_returnCode_t rc = SOLCLIENT_OK;
@@ -1012,17 +999,7 @@ K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunc
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_BLOCKING; // block in createFlow call
     flowProps[propIndex++] = SOLCLIENT_PROP_ENABLE_VAL;
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_ID; // the type of object to which this flow is bound
-    if ((type->i == KDB_SOLACE_ENDPOINT_TYPE_QUEUE) || (type->i == KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE))
-    {
-        flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_QUEUE; // for queue subscriptions
-    }
-    else
-    {
-        flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_TE; // for topic subscriptions
-        flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_TOPIC;
-        flowProps[propIndex++] = topicname->s;
-    }
-    
+    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_QUEUE; // for queue subscriptions
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_ACKMODE;
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_ACKMODE_CLIENT;
     flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_NAME;
@@ -1042,11 +1019,7 @@ K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunc
     GurananteedSubInfo subInfo;
     subInfo.flow_pt = flow_p;
     subInfo.flowKdbCbFunc = callbackFunction->s;
-    if ((type->i == KDB_SOLACE_ENDPOINT_TYPE_QUEUE) || (type->i == KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE))
-        GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(endpointname->s,subInfo));
-    else
-        GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(topicname->s,subInfo));
-
+    GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(endpointname->s,subInfo));
     return ki(SOLCLIENT_OK);
 }
 
