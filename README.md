@@ -196,14 +196,10 @@ Used for sending persistent messages onto a queue. Will persist until acknowledg
 - correlationId<optional>: can be NULL. Correlation Id is carried in the Solace message headers unmodified by the appliance and may be used for peer-to-peer message synchronization
 
 ```
-K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunction);
+K subscribepersistent_solace(K endpointname, K callbackFunction);
 ```
 
-Type should be an int, 0 for topic, 1 for queue. 
-
 The endpoint symbol specifies the queue/topic endpoint that is the target of the bind.
-
-The topicname symbol is optional. When binding to a Topic endpoint, the Topic may be set in the bind. 
 
 The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
 

@@ -173,5 +173,4 @@ Params:
 - -vpn - VPN name
 - -user - username
 - -pass - password
-- -destname - (optional) name of the endpoint to be created
-- -desttype - (optional) type of the endpoint (cant be 'queue' or 'topic')
+- -destname - (optional) name of the endpoint queue to be used

@@ -158,18 +158,16 @@ K unsubscribedirect_solace(K topic);
 K sendpersistent_solace(K dest, K replyType, K replydest, K data, K correlationId);
 
 /**
- * Subscribes to a queue or topic. The callback function provided will be called by the API whenever a message is received on the subscription
+ * Subscribes to a queue. The callback function provided will be called by the API whenever a message is received on the subscription
  *
- * @param type Should be an int. 0 for topic, 1 for queue
- * @param endpointname The endpoint name
- * @param topicname Only used when type is set to 0 for topic - the topic subscription for the topic endpoint
+ * @param endpointname The endpoint queue name
  * @param callbackFunction The kdb function to call for each received message. The callback function will use 7 params - original destination type, 
  * original destination name, reply destination type, reply destination name, correlationid, data. 
  * Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), destination name is a string (subscription name), 
  * Reply Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), reply destination name is a string,
  * correlationid is a string, and data is a string (payload)
  */
-K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunction);
+K subscribepersistent_solace(K endpointname, K callbackFunction);
 
 /**
  * Sends an acknowledgment on the specified Flow.
