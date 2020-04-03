@@ -190,13 +190,11 @@ K sendack_solace(K flow, K msgid);
 K subscribetmp_solace(K type, K callbackFunction);
 
 /**
- * Unsubscribes from a queue or topic
+ * Unsubscribes from a queue 
  *
- * @param type Should be an int. 0 for topic, 1 for queue
  * @param endpointname The endpoint name
- * @param topicname Only used when type is set to 0 for topic - the topic subscription for the topic endpoint
  */
-K unsubscribepersistent_solace(K type, K endpointname, K topicname);
+K unsubscribepersistent_solace(K endpointname);
 
 /**
  * Should be called after init_solace, when nothing else needs to be sent

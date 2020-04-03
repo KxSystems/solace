@@ -232,7 +232,7 @@ This should be called by the subscriptions callbackFunction to acknowledge the m
 The parameters required can be found in the input to the callbackFunction on the subscription.
 
 ```
-K unsubscribepersistent_solace(K type, K endpointname, K topicname);
+K unsubscribepersistent_solace(K endpointname);
 ```
 
 Removes subscription created via subscribepersistent_solace.

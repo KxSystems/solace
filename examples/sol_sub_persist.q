@@ -11,7 +11,7 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$f
 .solace.setflowcallback_solace:`libdeltasolace 2:(`setflowcallback_solace;1)
 .solace.init_solace:`libdeltasolace 2:(`init_solace;1)
 .solace.subscribepersistent_solace:`libdeltasolace 2:(`subscribepersistent_solace;4)
-.solace.unsubscribepersistent_solace:`libdeltasolace 2:(`unsubscribepersistent_solace;3)
+.solace.unsubscribepersistent_solace:`libdeltasolace 2:(`unsubscribepersistent_solace;1)
 .solace.sendack_solace:`libdeltasolace 2:(`sendack_solace;2)
 .solace.destroy_solace:`libdeltasolace 2:(`destroy_solace;1)
 
