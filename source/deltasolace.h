@@ -178,14 +178,13 @@ K subscribepersistent_solace(K endpointname, K callbackFunction);
 K sendack_solace(K flow, K msgid);
 
 /**
- * Creates and subscribes to a temp queue or topic. The callback function provided will be called by the API whenever a message is received on the subscription
+ * Creates and subscribes to a temp queue. The callback function provided will be called by the API whenever a message is received on the subscription
  *
- * @param type Should be an int. 0 for topic, 1 for queue
  * @param callbackFunction The kdb function to call for each received message. See subscribepersistent_solace callbackFunction - this uses the same
  * signature
  * @return A symbol representing the newly created topic or queue name when sucessfull, empty symbol if not
  */
-K subscribetmp_solace(K type, K callbackFunction);
+K subscribetmp_solace(K callbackFunction);
 
 /**
  * Unsubscribes from a queue 
