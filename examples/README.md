@@ -137,7 +137,7 @@ As per sol_sub_direct.q, but replies to any message received
 
 #### sol_pub_persist.q
 
-Sends a persistent message, with the ability to specify an optional reply destination
+Sends a persistent message onto a queue, with the ability to specify an optional reply destination
 
 Example:
 
@@ -153,7 +153,6 @@ Params:
 - -pass - password
 - -data - message payload to send
 - -destname - (optional) name of the endpoint to be created
-- -desttype - (optional) type of the endpoint (cant be 'queue' or 'topic')
 - -correlationid - (optional) correlation id
 - -replydestname - (optional) name of the reply endpoint to be created
 - -replytype -  (optional) type of the reply endpoint (cant be 'queue' or 'topic')

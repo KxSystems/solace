@@ -884,19 +884,15 @@ K unsubscribedirect_solace(K topic)
     return ki(ret);
 }
 
-K sendpersistent_solace(K type, K dest, K replyType, K replydest, K data, K correlationId)
+K sendpersistent_solace(K dest, K replyType, K replydest, K data, K correlationId)
 {
     CHECK_SESSION_CREATED;
-    CHECK_PARAM_TYPE(type,-KI,"sendpersistent_solace");
     CHECK_PARAM_TYPE(dest,-KS,"sendpersistent_solace");
     CHECK_PARAM_DATA_TYPE(data,"sendpersistent_solace");
 
     /* Set the destination. */
     solClient_destination_t destination;
-    if ((type->i == KDB_SOLACE_ENDPOINT_TYPE_QUEUE) || (type->i == KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE))
-        destination.destType = SOLCLIENT_QUEUE_DESTINATION;
-    else
-        destination.destType = SOLCLIENT_TOPIC_DESTINATION;
+    destination.destType = SOLCLIENT_QUEUE_DESTINATION;
     destination.dest = dest->s;
 
     solClient_opaqueMsg_pt msg_p = NULL;

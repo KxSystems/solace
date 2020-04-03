@@ -147,16 +147,15 @@ K subscribedirect_solace(K topic);
 K unsubscribedirect_solace(K topic);
 
 /**
- * Send data over Solace, using persistent/guaranteed messages
+ * Send data over Solace, using persistent/guaranteed messages on queue
  *
- * @param type Should be an int. 0 for topic, 1 for queue
  * @param dest Should be a symbol. The destination send data to (e.g. endpoint name of queue, topic name)
  * @param replyType Should be an int. 0 for topic, 1 for queue. The topic/queue that you wish a reply to this message to go to
  * @param replyDest Should be a symbol. The topic/queue that you wish a reply to this message to go to (empty for no reply expected)
  * @param data Can be a symbol of character array. The payload of the message.
  * @param correlationId Can be a symbol of character array. The Solace Correlation ID
  */
-K sendpersistent_solace(K type, K dest, K replyType, K replydest, K data, K correlationId);
+K sendpersistent_solace(K dest, K replyType, K replydest, K data, K correlationId);
 
 /**
  * Subscribes to a queue or topic. The callback function provided will be called by the API whenever a message is received on the subscription
