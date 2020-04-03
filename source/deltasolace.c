@@ -234,7 +234,7 @@ K kdbCallback(I d)
             solClient_msg_getSenderTimestamp(msg,&sendTime);
             if (sendTime>0)
                 sendTime=(sendTime*1000000l)-(946684800l*1000000000l);
-
+                
             K keys = ktn(KS,4);
             kS(keys)[0]=ss((char*)"isRedeliv");
             kS(keys)[1]=ss((char*)"isDiscard");
@@ -284,16 +284,6 @@ K kdbCallback(I d)
         delete (msgAndSource._event._subMsg);
     }
     return (K)0;
-}
-
-K sendack_solace(K flow, K msgid)
-{
-    CHECK_PARAM_TYPE(flow,-KJ,"sendack_solace");
-    CHECK_PARAM_TYPE(msgid,-KJ,"sendack_solace");
-    solClient_opaqueFlow_pt solFlow = (solClient_opaqueFlow_pt)flow->j;
-    solClient_msgId_t solMsgId = msgid->j;
-    solClient_returnCode_t retCode = solClient_flow_sendAck (solFlow, solMsgId); 
-    return ki(retCode);
 }
 
 /* The message receive callback function is mandatory for session creation. Gets called with msgs from direct subscriptions. */
@@ -630,6 +620,16 @@ K destroy_solace(K a)
     }
     session_p = NULL;
     return ki(SOLCLIENT_OK); 
+}
+
+K version_solace(K unused)
+{
+    solClient_version_info_pt version = NULL;
+    solClient_version_get (&version);
+    K keys = knk(3,ks((char*)"solVersion"),ks((char*)"solDate"),ks((char*)"solVariant"));
+    K vals = knk(3,ks((char*)version->version_p),ks((char*)version->dateTime_p),ks((char*)version->variant_p));
+    K dict = xD(keys,vals);
+    return dict;
 }
 
 K setsessioncallback_solace(K callbackFunction)
@@ -1059,6 +1059,16 @@ K subscribepersistent_solace(K type, K endpointname, K topicname, K callbackFunc
         GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(topicname->s,subInfo));
 
     return ki(SOLCLIENT_OK);
+}
+
+K sendack_solace(K flow, K msgid)
+{
+    CHECK_PARAM_TYPE(flow,-KJ,"sendack_solace");
+    CHECK_PARAM_TYPE(msgid,-KJ,"sendack_solace");
+    solClient_opaqueFlow_pt solFlow = (solClient_opaqueFlow_pt)flow->j;
+    solClient_msgId_t solMsgId = msgid->j;
+    solClient_returnCode_t retCode = solClient_flow_sendAck (solFlow, solMsgId); 
+    return ki(retCode);
 }
 
 K unsubscribepersistent_solace(K type, K endpointname, K topicname)

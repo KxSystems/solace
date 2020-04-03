@@ -8,6 +8,7 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$f
 .solace.setsessioncallback_solace:`libdeltasolace 2:(`setsessioncallback_solace;1)
 .solace.setflowcallback_solace:`libdeltasolace 2:(`setflowcallback_solace;1)
 .solace.init_solace:`libdeltasolace 2:(`init_solace;1)
+.solace.version_solace:`libdeltasolace 2:(`version_solace;1)
 .solace.getcapability_solace:`libdeltasolace 2:(`getcapability_solace;1)
 .solace.destroy_solace:`libdeltasolace 2:(`destroy_solace;1)
 
@@ -18,6 +19,8 @@ sessionUpdate:{[eventType;responseCode;eventInfo]r:enlist each (`int$eventType;r
 / setup flow event callbacks
 flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`int$eventType;responseCode;eventInfo;destType;destName);0N!("FLOW EVENT: ####";r);r};
 .solace.setflowcallback_solace[`flowUpdate];
+
+("API Version Info: ";.solace.version_solace[1i])
 
 .solace.init_solace[soloptions]
 
