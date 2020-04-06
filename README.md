@@ -202,7 +202,7 @@ The endpoint symbol specifies the queue/topic endpoint that is the target of the
 
 The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
 
-subsType,topicName,replyType,replyName,correlationId,flowPtr,msgId,payload
+destType,destName,replyType,replyName,correlationId,flowPtr,msgId,payload
 
 Each value in the dictionary consists of a list of values (more than 1 message can be received on a callback)
 

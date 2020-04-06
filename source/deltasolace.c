@@ -110,26 +110,26 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
 K createBatch()
 {
     K vals = knk(0);
-    jk(&(vals), ktn(KI, 0));//[0]
-    jk(&(vals), knk(0));    //[1]
-    jk(&(vals), ktn(KI,0)); //[2]
-    jk(&(vals), knk(0));    //[3]
-    jk(&(vals), knk(0));    //[4]
-    jk(&(vals), ktn(KJ,0)); //[5]
-    jk(&(vals), ktn(KJ,0)); //[6]
-    jk(&(vals), knk(0));    //[7]
+    jk(&(vals), ktn(KI, 0));//[0] destination type
+    jk(&(vals), knk(0));    //[1] destination name
+    jk(&(vals), ktn(KI,0)); //[2] replytype
+    jk(&(vals), knk(0));    //[3] replyname
+    jk(&(vals), knk(0));    //[4] correlation id
+    jk(&(vals), ktn(KJ,0)); //[5] flowptr (ie. subscription object)
+    jk(&(vals), ktn(KJ,0)); //[6] message id (used for acks)
+    jk(&(vals), knk(0));    //[7] payload
     return vals;
 }
 
-int addMsgToBatch(K* batch, int subsType, const char* topicName, int replyType, const char* replyName, const char* correlationId, solClient_opaqueFlow_pt flowPtr, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
+int addMsgToBatch(K* batch, int destType, const char* destName, int replyType, const char* replyName, const char* correlationId, solClient_opaqueFlow_pt flowPtr, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
 {
-    ja(&(((K*)(*batch)->G0)[0]), &subsType);
-    jk(&(((K*)(*batch)->G0)[1]), kp((char*)topicName));
+    ja(&(((K*)(*batch)->G0)[0]), &destType);
+    jk(&(((K*)(*batch)->G0)[1]), kp((char*)destName));
     ja(&(((K*)(*batch)->G0)[2]), &replyType);
     jk(&(((K*)(*batch)->G0)[3]), kp((char*)replyName));
     jk(&(((K*)(*batch)->G0)[4]), kp((char*)correlationId));
-    ja(&(((K*)(*batch)->G0)[5]), &flowPtr);
-    ja(&(((K*)(*batch)->G0)[6]), &msgId);
+    ja(&(((K*)(*batch)->G0)[5]), &flowPtr); // flowptr (ie. subscription object)
+    ja(&(((K*)(*batch)->G0)[6]), &msgId);   // message id (used for acks)
     K payload = ktn(KG, dataSize);
     memcpy(payload->G0, data, dataSize);
     jk(&(((K*)(*batch)->G0)[7]), payload);
@@ -257,8 +257,8 @@ K kdbCallback(I d)
         }
         
         K keys = ktn(KS,8);
-        kS(keys)[0]=ss((char*)"subsType");
-        kS(keys)[1]=ss((char*)"topicName");
+        kS(keys)[0]=ss((char*)"destType");
+        kS(keys)[1]=ss((char*)"destName");
         kS(keys)[2]=ss((char*)"replyType");
         kS(keys)[3]=ss((char*)"replyName");
         kS(keys)[4]=ss((char*)"correlationId");
