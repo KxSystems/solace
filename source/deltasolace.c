@@ -73,14 +73,6 @@ static std::string KDB_SESSION_EVENT_CALLBACK_FUNC;
 static std::string KDB_FLOW_EVENT_CALLBACK_FUNC;
 static std::string KDB_DIRECT_MSG_CALLBACK_FUNC;
 
-enum KdbSolaceEndpointType
-{
-    KDB_SOLACE_ENDPOINT_TYPE_TOPIC      = 0,
-    KDB_SOLACE_ENDPOINT_TYPE_QUEUE      = 1,
-    KDB_SOLACE_ENDPOINT_TYPE_TMP_TOPIC  = 2,
-    KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE  = 3
-};
-
 struct GurananteedSubInfo
 {
     solClient_opaqueFlow_pt flow_pt;
@@ -149,10 +141,7 @@ void setReplyTo(K replyType, K replydest, solClient_opaqueMsg_pt msg_p)
     if ((replydest != NULL) && (replydest->t == -KS) && (replyType->t == -KI) && (strlen(replydest->s) > 0))
     {
         solClient_destination_t replydestination;
-        if ((replyType->i == KDB_SOLACE_ENDPOINT_TYPE_QUEUE) || (replyType->i == KDB_SOLACE_ENDPOINT_TYPE_TMP_QUEUE))
-            replydestination.destType = SOLCLIENT_QUEUE_DESTINATION;
-        else
-            replydestination.destType = SOLCLIENT_TOPIC_DESTINATION;
+        replydestination.destType = (solClient_destinationType_t)replyType->i;
         replydestination.dest = replydest->s;
         solClient_msg_setReplyTo ( msg_p, &replydestination, sizeof ( replydestination ) );
     }
