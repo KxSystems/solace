@@ -140,9 +140,7 @@ void setReplyTo(K replyType, K replydest, solClient_opaqueMsg_pt msg_p)
 {
     if ((replydest != NULL) && (replydest->t == -KS) && (replyType->t == -KI) && (strlen(replydest->s) > 0))
     {
-        solClient_destination_t replydestination;
-        replydestination.destType = (solClient_destinationType_t)replyType->i;
-        replydestination.dest = replydest->s;
+        solClient_destination_t replydestination = {(solClient_destinationType_t)replyType->i, replydest->s};
         solClient_msg_setReplyTo ( msg_p, &replydestination, sizeof ( replydestination ) );
     }
 }
@@ -311,12 +309,8 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
     std::string tmpDest;
     tmpDest.assign(destination.dest);
     // replyType
-    solClient_destination_t msgDest;
-    solClient_destination_t replyto;
-    msgDest.destType = SOLCLIENT_NULL_DESTINATION;
-    msgDest.dest = NULL;
-    replyto.destType = SOLCLIENT_NULL_DESTINATION;
-    replyto.dest = NULL;
+    solClient_destination_t msgDest = {SOLCLIENT_NULL_DESTINATION,NULL};
+    solClient_destination_t replyto = {SOLCLIENT_NULL_DESTINATION,NULL};
     const char* msgDestName = "";
     if (solClient_msg_getDestination(msg_p,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
         msgDestName = msgDest.dest;
@@ -362,25 +356,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
         batchInfoMap::iterator it = BATCH_PER_DESTINATION.find(tmpDest);
         if (it == BATCH_PER_DESTINATION.end())
             it = BATCH_PER_DESTINATION.insert(it,std::make_pair(tmpDest, createBatch()));
-        // add current msg data and get batch size
-        int currentBatchSize = addMsgToBatch(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
-        // if batch over batch size attempt to send.
-        if (currentBatchSize >= 1000)
-        {
-            msgAndSource._event._subMsg->_vals = (it->second);
-            ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
-            if (numWritten != sizeof(msgAndSource))
-            {
-                // pipe still full
-                msgAndSource._event._subMsg->_vals = NULL;
-                delete (msgAndSource._event._subMsg);
-                // leave batch publish timer running
-                return SOLCLIENT_CALLBACK_OK;
-            }
-            // batch is sent over pipe - reset to NULL - Timer will cancel itself
-            it->second = NULL;
-            return SOLCLIENT_CALLBACK_OK;
-        }
+        addMsgToBatch(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
         delete (msgAndSource._event._subMsg);
         return SOLCLIENT_CALLBACK_OK;
     }
@@ -794,10 +770,7 @@ K endpointtopicunsubscribe_solace(K options, K provFlags, K topic)
 
 static solClient_opaqueMsg_pt createDirectMsg(K topic,K data)
 {
-    solClient_destination_t destination;
-    destination.destType = SOLCLIENT_TOPIC_DESTINATION;
-    destination.dest = topic->s;
-
+    solClient_destination_t destination = {SOLCLIENT_TOPIC_DESTINATION, topic->s};
     solClient_opaqueMsg_pt msg_p = NULL;
     solClient_msg_alloc ( &msg_p );
     solClient_msg_setDeliveryMode ( msg_p, SOLCLIENT_DELIVERY_MODE_DIRECT );
@@ -880,9 +853,7 @@ K sendpersistent_solace(K dest, K replyType, K replydest, K data, K correlationI
     CHECK_PARAM_DATA_TYPE(data,"sendpersistent_solace");
 
     /* Set the destination. */
-    solClient_destination_t destination;
-    destination.destType = SOLCLIENT_QUEUE_DESTINATION;
-    destination.dest = dest->s;
+    solClient_destination_t destination = {SOLCLIENT_QUEUE_DESTINATION, dest->s};
 
     solClient_opaqueMsg_pt msg_p = NULL;
     solClient_msg_alloc ( &msg_p );
