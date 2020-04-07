@@ -153,10 +153,16 @@ Used for sending direct messages (Ref: https://docs.solace.com/PubSub-Basics/Dir
 - data: string/symbol/byte data, which forms the basis of the payload for the message
 
 ```
- K senddirectrequest_solace(K topic, K data, K timeout);
+ K senddirectrequest_solace(K topic, K data, K timeout, K replyType, K replydest);
 ```
 
-Used for sending direct messages that require a sync reply. Works as per senddirect_solace with an extra integer timeout param that indicate the millisecons to block/wait (must be greater than zero). Returns a byte list of message received, containing the payload. Otherwise will be an int to indicate the return code. If value 7, the reply wasnt received. 
+Used for sending direct messages that require a sync reply.  Returns a byte list of message received, containing the payload. Otherwise will be an int to indicate the return code. If value 7, the reply wasnt received. 
+
+- topic: Topic to sending the message. String type.
+- data: string/symbol/byte data, which forms the basis of the payload for the message
+- timeout: integer timeout param that indicate the millisecons to block/wait (must be greater than zero).
+- replyType Should be an int. -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The topic/queue that you wish a reply to this message to go to
+- replyDest Should be a symbol. The topic/queue that you wish a reply to this message to go to (empty for default session topic)
 
 ### Topic Subscriptions
 

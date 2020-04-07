@@ -792,7 +792,7 @@ K senddirect_solace(K topic, K data)
     return ki(retCode);
 }
 
- K senddirectrequest_solace(K topic, K data, K timeout)
+ K senddirectrequest_solace(K topic, K data, K timeout, K replyType, K replydest)
  {
     CHECK_SESSION_CREATED;
     CHECK_PARAM_TYPE(topic,-KS,"senddirectrequest_solace");
@@ -801,6 +801,7 @@ K senddirect_solace(K topic, K data)
     if (timeout->i <= 0)
         krr((char*)"senddirectrequest_solace must be provided with timeout greater than zero");
     solClient_opaqueMsg_pt msg_p = createDirectMsg(topic,data);
+    setReplyTo(replyType, replydest, msg_p);
     solClient_opaqueMsg_pt replyMsg = NULL;
     solClient_returnCode_t retCode = solClient_session_sendRequest ( session_p, msg_p, &replyMsg, timeout->i); 
     solClient_msg_free ( &msg_p );
