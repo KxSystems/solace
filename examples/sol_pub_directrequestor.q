@@ -8,7 +8,7 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD`SESS
 .solace.setsessioncallback_solace:`libdeltasolace 2:(`setsessioncallback_solace;1)
 .solace.setflowcallback_solace:`libdeltasolace 2:(`setflowcallback_solace;1)
 .solace.init_solace:`libdeltasolace 2:(`init_solace;1)
-.solace.senddirectrequest_solace:`libdeltasolace 2:(`senddirectrequest_solace;3)
+.solace.senddirectrequest_solace:`libdeltasolace 2:(`senddirectrequest_solace;5)
 .solace.destroy_solace:`libdeltasolace 2:(`destroy_solace;1)
 
 / setup session event callbacks
@@ -23,7 +23,7 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 .solace.init_solace[soloptions]
 
 / sending a direct message to topic requiring a reply
-reply:.solace.senddirectrequest_solace[`$first params`topic;`$first params`data;5000i]
+reply:.solace.senddirectrequest_solace[`$first params`topic;`$first params`data;5000i;"";""]
 replyType:type reply
 if[replyType=4h;0N!"Got reply with contents:",`char$reply]
 if[replyType=-6h;0N!"Request failed with code :";0N!reply]

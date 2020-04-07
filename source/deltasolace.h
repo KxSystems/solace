@@ -116,10 +116,12 @@ K senddirect_solace(K topic, K data);
  * @param topic Should be a string. The Topic to send data to.
  * @param data Can be a symbol or string or byte array. The payload of the message.
  * @param timeout Integer type representing milliseconds to wait/block, must be greater than 0
+ * @param replyType Should be an int. -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The topic/queue that you wish a reply to this message to go to
+ * @param replyDest Should be a symbol. The topic/queue that you wish a reply to this message to go to (empty for default session topic)
  * @return Returns a byte list of message received, containing the payload. Otherwise will be an int
  * to indicate the return code. If value 7, the reply wasnt received. 
  */
- K senddirectrequest_solace(K topic, K data, K timeout);
+ K senddirectrequest_solace(K topic, K data, K timeout, K replyType, K replydest);
 
 /**
  * Sets the KDB+ function that should be called on receipt of each direct msg created via
