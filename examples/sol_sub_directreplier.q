@@ -10,8 +10,8 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$f
 .solace.setsessioncallback_solace:`libdeltasolace 2:(`setsessioncallback_solace;1)
 .solace.setflowcallback_solace:`libdeltasolace 2:(`setflowcallback_solace;1)
 .solace.init_solace:`libdeltasolace 2:(`init_solace;1)
-.solace.callbackdirect_solace:`libdeltasolace 2:(`callbackdirect_solace;1)
-.solace.subscribedirect_solace:`libdeltasolace 2:(`subscribedirect_solace;1)
+.solace.callbacktopic_solace:`libdeltasolace 2:(`callbacktopic_solace;1)
+.solace.subscribetopic_solace:`libdeltasolace 2:(`subscribetopic_solace;1)
 .solace.unsubscribetopic_solace:`libdeltasolace 2:(`unsubscribetopic_solace;1)
 .solace.destroy_solace:`libdeltasolace 2:(`destroy_solace;1)
 
@@ -28,7 +28,7 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 
 / receiving and reply to a direct msg
 subUpdate:{[x;y;z] 0N!("RECEIVED MSG: #### Destination ";x;" Payload ";`char$y;" Dict ";z);`byte$"reply contents"};
-.solace.callbackdirect_solace[`subUpdate]
-.solace.subscribedirect_solace[`$first params`topic]
+.solace.callbacktopic_solace[`subUpdate]
+.solace.subscribetopic_solace[`$first params`topic]
 
 / dont disconnect or quit, in order to receive any messages

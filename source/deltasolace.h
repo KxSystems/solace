@@ -123,21 +123,21 @@ K senddirect_solace(K topic, K data);
 
 /**
  * Sets the KDB+ function that should be called on receipt of each direct msg created via
- * subscribedirect_solace. The function should accept 3 params, symbol destination, byte list for
+ * subscribetopic_solace. The function should accept 3 params, symbol destination, byte list for
  * payload and a dict of msg values. If the dict contains a value of true for the key 'isRequest',
  * the sender is request a reply. In order to reply, return either a symbol/string or byte list
  * for the reply msg contents.
  * @param cb Can be a symbol or string, which is the name of the q function to call on receipt of
  * each direct message
  */
-K callbackdirect_solace(K cb);
+K callbacktopic_solace(K cb);
 
 /**
- * Subscribe to a direct message subscription 
+ * Subscribe to a topic 
  *
  * @param topic Should be a string. The Topic to subscribe to
  */
-K subscribedirect_solace(K topic);
+K subscribetopic_solace(K topic);
 
 /**
  * Unsubscribe from a topic subscription 

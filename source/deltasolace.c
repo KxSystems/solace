@@ -817,16 +817,16 @@ K senddirect_solace(K topic, K data)
     return ki(retCode);
  }
 
-K callbackdirect_solace(K func)
+K callbacktopic_solace(K func)
 {
-    CHECK_PARAM_STRING_TYPE(func,"callbackdirect_solace");
+    CHECK_PARAM_STRING_TYPE(func,"callbacktopic_solace");
     char cbStr[getStringSize(func)];
     setString(cbStr,func,sizeof(cbStr));
     KDB_DIRECT_MSG_CALLBACK_FUNC.assign(cbStr);
     return ki(SOLCLIENT_OK);
 }
 
-K subscribedirect_solace(K topic)
+K subscribetopic_solace(K topic)
 {
     CHECK_SESSION_CREATED;
     CHECK_PARAM_TYPE(topic,-KS,"subscribedirect_solace");
