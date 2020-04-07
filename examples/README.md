@@ -137,12 +137,12 @@ As per sol_sub_direct.q, but replies to any message received
 
 #### sol_pub_persist.q
 
-Sends a persistent message onto a queue, with the ability to specify an optional reply destination
+Sends a persistent/guaranteed message
 
 Example:
 
 ```c
-q sol_pub_persist.q -destname "Q/1" -data "hello world" -replytype queue -replydestname "Q/replyname" -correlationid 555
+q sol_pub_persist.q -desttype "queue" -destname "Q/1" -data "hello world"  -correlationid 555
 ```
 
 Params:
@@ -152,10 +152,9 @@ Params:
 - -user - username
 - -pass - password
 - -data - message payload to send
+- -desttype - (optional) type of the destination (can be 'queue' or 'topic'), defaults to queue
 - -destname - (optional) name of the endpoint to be created
 - -correlationid - (optional) correlation id
-- -replydestname - (optional) name of the reply endpoint to be created
-- -replytype -  (optional) type of the reply endpoint (cant be 'queue' or 'topic')
 
 #### sol_sub_persist.q
 

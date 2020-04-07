@@ -1,5 +1,5 @@
-default_nm:`host`vpn`user`pass`destname`data`correlationid`replytype`replydestname
-default_val:(enlist "host.docker.internal";enlist "default";enlist "admin";enlist "admin";enlist "Q/test";enlist "kdb data";enlist "";enlist "";enlist "")
+default_nm:`host`vpn`user`pass`desttype`destname`data`correlationid
+default_val:(enlist "host.docker.internal";enlist "default";enlist "admin";enlist "admin";enlist "queue";enlist "Q/test";enlist "kdb data";enlist "")
 params:.Q.def[default_nm!default_val].Q.opt .z.x
 
 soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$first params`host;`$first params`vpn;`$first params`user;`$first params`pass);
@@ -8,7 +8,7 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$f
 .solace.setsessioncallback_solace:`libdeltasolace 2:(`setsessioncallback_solace;1)
 .solace.setflowcallback_solace:`libdeltasolace 2:(`setflowcallback_solace;1)
 .solace.init_solace:`libdeltasolace 2:(`init_solace;1)
-.solace.sendpersistent_solace:`libdeltasolace 2:(`sendpersistent_solace;5)
+.solace.sendpersistent_solace:`libdeltasolace 2:(`sendpersistent_solace;4)
 .solace.destroy_solace:`libdeltasolace 2:(`destroy_solace;1)
 
 / setup session event callbacks
@@ -21,12 +21,12 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 
 / perform solace actions
 q:`$"queue"
-.solace.reply_type:`int$(q=`$first params`replytype)
+.solace.dest_type:`int$(q=`$first params`desttype)
 
 .solace.init_solace[soloptions]
 
 / sending a persistent message to a queue
-.solace.sendpersistent_solace[`$first params`destname;.solace.reply_type;`$first params`replydestname;`$first params`data;`$first params`correlationid]
+.solace.sendpersistent_solace[.solace.dest_type;`$first params`destname;`$first params`data;`$first params`correlationid]
 
 .solace.destroy_solace[1i]
 

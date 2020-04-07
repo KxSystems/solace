@@ -192,14 +192,13 @@ As above, but unsubscribes from existing subscription
 ### Persistent/Garanteed Messaging
 
 ```
-K sendpersistent_solace(K dest, K replyType, K replydest, K data, K correlationId);
+K sendpersistent_solace(K destType, K dest, K data, K correlationId);
 ```
 
-Used for sending persistent messages onto a queue. Will persist until acknowledged (see sendack_solace) or conditions met (see [Solace docs](https://docs.solace.com/PubSub-Basics/Guaranteed-Messages.htm)) 
+Used for sending persistent messages onto a queue or topic. 
 
+- destType: should be an int, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. 
 - dest: Destination name of the queue/topic. Symbol type.
-- replyType<optional> : can be NULL, otherwise should be an int, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The type of the reply destination that can be used to reply to this message
-- replyDest<optional>: can be NULL. Destination name of the queue/topic that can be used to reply to this message. Can be string/symbol.
 - data: string/symbol/byte data, which forms the basis of the payload for the message
 - correlationId<optional>: can be NULL. Correlation Id is carried in the Solace message headers unmodified by the appliance and may be used for peer-to-peer message synchronization
 
