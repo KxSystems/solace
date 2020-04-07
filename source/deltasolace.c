@@ -848,18 +848,15 @@ K unsubscribetopic_solace(K topic)
     return ki(ret);
 }
 
-K sendpersistent_solace(K dest, K replyType, K replydest, K data, K correlationId)
+K sendpersistent_solace(K destType, K dest, K data, K correlationId)
 {
     CHECK_SESSION_CREATED;
+    CHECK_PARAM_TYPE(destType,-KI,"sendpersistent_solace");
     CHECK_PARAM_TYPE(dest,-KS,"sendpersistent_solace");
     CHECK_PARAM_DATA_TYPE(data,"sendpersistent_solace");
 
-    /* Set the destination. */
-    solClient_destination_t destination = {SOLCLIENT_QUEUE_DESTINATION, dest->s};
-
     solClient_opaqueMsg_pt msg_p = NULL;
     solClient_msg_alloc ( &msg_p );
-
     solClient_msg_setDeliveryMode ( msg_p, SOLCLIENT_DELIVERY_MODE_PERSISTENT );
     solClient_msg_setExpiration (msg_p, 0);
     if (correlationId != NULL)
@@ -868,8 +865,8 @@ K sendpersistent_solace(K dest, K replyType, K replydest, K data, K correlationI
         setString(correlationIdStr,correlationId,sizeof(correlationIdStr));
         solClient_msg_setCorrelationId (msg_p, correlationIdStr);
     }
+    solClient_destination_t destination = {(solClient_destinationType_t)destType->i, dest->s};
     solClient_msg_setDestination ( msg_p, &destination, sizeof ( destination ) ); 
-    setReplyTo(replyType, replydest, msg_p);
     solClient_msg_setBinaryAttachment ( msg_p, getData(data), getDataSize(data));
     solClient_returnCode_t retCode = SOLCLIENT_OK;
     retCode = solClient_session_sendMsg ( session_p, msg_p ); 
