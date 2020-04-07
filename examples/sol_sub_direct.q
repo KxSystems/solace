@@ -12,7 +12,7 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$f
 .solace.init_solace:`libdeltasolace 2:(`init_solace;1)
 .solace.callbackdirect_solace:`libdeltasolace 2:(`callbackdirect_solace;1)
 .solace.subscribedirect_solace:`libdeltasolace 2:(`subscribedirect_solace;1)
-.solace.unsubscribedirect_solace:`libdeltasolace 2:(`unsubscribedirect_solace;1)
+.solace.unsubscribetopic_solace:`libdeltasolace 2:(`unsubscribetopic_solace;1)
 .solace.destroy_solace:`libdeltasolace 2:(`destroy_solace;1)
 
 / setup session event callbacks

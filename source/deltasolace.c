@@ -836,10 +836,10 @@ K subscribedirect_solace(K topic)
     return ki(ret);
 }
 
-K unsubscribedirect_solace(K topic)
+K unsubscribetopic_solace(K topic)
 {
     CHECK_SESSION_CREATED;
-    CHECK_PARAM_TYPE(topic,-KS,"subscribedirect_solace");
+    CHECK_PARAM_TYPE(topic,-KS,"subscribetopic_solace");
     solClient_returnCode_t ret = solClient_session_topicUnsubscribeExt (session_p,
                                         SOLCLIENT_SUBSCRIBE_FLAGS_REQUEST_CONFIRM,
                                         topic->s );

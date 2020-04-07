@@ -140,11 +140,11 @@ K callbackdirect_solace(K cb);
 K subscribedirect_solace(K topic);
 
 /**
- * Unsubscribe from a direct message subscription 
+ * Unsubscribe from a topic subscription 
  *
  * @param topic Should be a string. The Topic to unsubscribe from
  */
-K unsubscribedirect_solace(K topic);
+K unsubscribetopic_solace(K topic);
 
 /**
  * Send data over Solace, using persistent/guaranteed messages on queue

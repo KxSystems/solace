@@ -170,12 +170,12 @@ Registers a q function that should be called on receipt of messages from subscri
 K subscribedirect_solace(K topic);
 ```
 
-Subscribes to a topic for direct messages. Solace format wildcards can be used in the topic subscription value.
+Subscribes to a topic. Solace format wildcards can be used in the topic subscription value.
 
 * topic: Topic to subscribe to. String type.
 
 ```
-K unsubscribedirect_solace(K topic);
+K unsubscribetopic_solace(K topic);
 ```
 
 As above, but unsubscribes from existing subscription
