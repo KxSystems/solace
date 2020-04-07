@@ -826,12 +826,13 @@ K callbacktopic_solace(K func)
     return ki(SOLCLIENT_OK);
 }
 
-K subscribetopic_solace(K topic)
+K subscribetopic_solace(K topic, K isBlocking)
 {
     CHECK_SESSION_CREATED;
-    CHECK_PARAM_TYPE(topic,-KS,"subscribedirect_solace");
+    CHECK_PARAM_TYPE(topic,-KS,"subscribetopic_solace");
+    CHECK_PARAM_TYPE(isBlocking,-KB,"subscribetopic_solace");
     solClient_returnCode_t ret = solClient_session_topicSubscribeExt ( session_p,
-                                          SOLCLIENT_SUBSCRIBE_FLAGS_REQUEST_CONFIRM,
+                                          ((isBlocking->g==1)?SOLCLIENT_SUBSCRIBE_FLAGS_WAITFORCONFIRM:SOLCLIENT_SUBSCRIBE_FLAGS_REQUEST_CONFIRM),
                                           topic->s );
     return ki(ret);
 }

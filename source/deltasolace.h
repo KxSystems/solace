@@ -136,8 +136,9 @@ K callbacktopic_solace(K cb);
  * Subscribe to a topic 
  *
  * @param topic Should be a string. The Topic to subscribe to
+ * @param bool True to block until confirm or true to get session event callback on sub activation
  */
-K subscribetopic_solace(K topic);
+K subscribetopic_solace(K topic, K isBlocking);
 
 /**
  * Unsubscribe from a topic subscription 

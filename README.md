@@ -158,6 +158,8 @@ Used for sending direct messages (Ref: https://docs.solace.com/PubSub-Basics/Dir
 
 Used for sending direct messages that require a sync reply. Works as per senddirect_solace with an extra integer timeout param that indicate the millisecons to block/wait (must be greater than zero). Returns a byte list of message received, containing the payload. Otherwise will be an int to indicate the return code. If value 7, the reply wasnt received. 
 
+### Topic Subscriptions
+
 ```
 K callbacktopic_solace(K cb);
 ```
@@ -167,12 +169,13 @@ Registers a q function that should be called on receipt of messages from topic s
 * cb: A q function that takes 3 parameters. The function should accept 3 parameters, symbol destination, byte list for payload and a dictionary of msg values
 
 ```
-K subscribetopic_solace(K topic);
+K subscribetopic_solace(K topic, K isBlocking);
 ```
 
 Subscribes to a topic. Solace format wildcards can be used in the topic subscription value.
 
 * topic: Topic to subscribe to. String type.
+* isBlocking: True to block until confirm or true to get session event callback on sub activation
 
 ```
 K unsubscribetopic_solace(K topic);
