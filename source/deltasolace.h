@@ -175,7 +175,7 @@ K sendpersistent_solace(K destType, K dest, K data, K correlationId);
 K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyType, K replydest);
 
 /**
- * Subscribes to a queue. The callback function provided will be called by the API whenever a message is received on the subscription
+ * Subscribes/Binds to an endpoint (e.g. queue). The callback function provided will be called by the API whenever a message is received on the subscription
  *
  * @param endpointname The endpoint queue name
  * @param callbackFunction The kdb function to call for each received message. The callback function will use 7 params - original destination type, 
@@ -184,7 +184,7 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
  * Reply Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), reply destination name is a string,
  * correlationid is a string, and data is a string (payload)
  */
-K subscribepersistent_solace(K endpointname, K callbackFunction);
+K bindqueue_solace(K endpointname, K callbackFunction);
 
 /**
  * Sends an acknowledgment on the specified Flow.
@@ -195,20 +195,11 @@ K subscribepersistent_solace(K endpointname, K callbackFunction);
 K sendack_solace(K flow, K msgid);
 
 /**
- * Creates and subscribes to a temp queue. The callback function provided will be called by the API whenever a message is received on the subscription
- *
- * @param callbackFunction The kdb function to call for each received message. See subscribepersistent_solace callbackFunction - this uses the same
- * signature
- * @return A symbol representing the newly created topic or queue name when sucessfull, empty symbol if not
- */
-K subscribetmp_solace(K callbackFunction);
-
-/**
  * Unsubscribes from a queue 
  *
  * @param endpointname The endpoint name
  */
-K unsubscribepersistent_solace(K endpointname);
+K unbindqueue_solace(K endpointname);
 
 /**
  * Should be called after init_solace, when nothing else needs to be sent

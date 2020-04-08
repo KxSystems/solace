@@ -911,57 +911,9 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
         return payload;
     }
     return ki(retCode);
- }
-
-K subscribetmp_solace(K callbackFunction)
-{ 
-    CHECK_SESSION_CREATED;
-    CHECK_PARAM_TYPE(callbackFunction,-KS,"subscribetmp_solace");
-
-    solClient_flow_createFuncInfo_t flowFuncInfo = SOLCLIENT_SESSION_CREATEFUNC_INITIALIZER;
-    flowFuncInfo.rxMsgInfo.callback_p = guaranteedSubCallback;
-    flowFuncInfo.rxMsgInfo.user_p = NULL;
-    flowFuncInfo.eventInfo.callback_p = flowEventCallback;
-    flowFuncInfo.eventInfo.user_p = NULL;
-
-    solClient_opaqueFlow_pt flow_p = NULL;
-    solClient_returnCode_t rc = SOLCLIENT_OK;
-    const char* flowProps[20];
-    int propIndex = 0;
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_BLOCKING;
-    flowProps[propIndex++] = SOLCLIENT_PROP_ENABLE_VAL;
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_ID;
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_QUEUE;
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_ACKMODE;
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_ACKMODE_CLIENT;
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_DURABLE;
-    flowProps[propIndex++] = SOLCLIENT_PROP_DISABLE_VAL;
-    flowProps[propIndex] = NULL;
-
-    rc = solClient_session_createFlow((char**)flowProps,session_p,&flow_p,&flowFuncInfo,sizeof(flowFuncInfo));
-    if (rc != SOLCLIENT_OK)
-    {
-        printf("[%ld] Solace subscribetmp_solace createFlow error %d: %s\n",THREAD_ID,rc,solClient_returnCodeToString(rc));
-        return ks((char*)"");
-    }
-
-    solClient_destination_t replyToAddr;
-    if ( ( rc = solClient_flow_getDestination ( flow_p, &replyToAddr, sizeof ( replyToAddr ) ) ) != SOLCLIENT_OK )
-    {
-        printf("[%ld] Solace subscribetmp_solace getdestination error %d: %s\n",THREAD_ID,rc,solClient_returnCodeToString(rc));
-        return ks((char*)"");
-    }
-
-    // remember callback function to use for this subscription
-    GurananteedSubInfo subInfo;
-    subInfo.flow_pt = flow_p;
-    subInfo.flowKdbCbFunc = callbackFunction->s;
-    GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(replyToAddr.dest,subInfo));
-
-    return ks((char*)replyToAddr.dest);
 }
 
-K subscribepersistent_solace(K endpointname, K callbackFunction)
+K bindqueue_solace(K endpointname, K callbackFunction)
 {
     CHECK_SESSION_CREATED;
     CHECK_PARAM_TYPE(endpointname,-KS,"subscribepersistent_solace");
@@ -1020,7 +972,7 @@ K sendack_solace(K flow, K msgid)
     return ki(retCode);
 }
 
-K unsubscribepersistent_solace(K endpointname)
+K unbindqueue_solace(K endpointname)
 {
     CHECK_PARAM_TYPE(endpointname,-KS,"unsubscribepersistent_solace");
     
