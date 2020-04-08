@@ -215,29 +215,19 @@ Used for sending guaranteed messages that require a sync reply.  Returns a byte 
 - replyType Should be an int. -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The topic/queue that you wish a reply to this message to go to
 - replyDest Should be a symbol. The topic/queue that you wish a reply to this message to go to (empty for default session topic)
 
-### Persistent/Garanteed Message Subscribing
+### Flow Binding
 
 ```
-K subscribepersistent_solace(K endpointname, K callbackFunction);
+K bindqueue_solace(K endpointname, K callbackFunction);
 ```
 
-The endpoint symbol specifies the queue/topic endpoint that is the target of the bind.
+The endpoint symbol specifies the queue endpoint that is the target of the bind.
 
 The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
 
 destType,destName,replyType,replyName,correlationId,flowPtr,msgId,payload
 
 Each value in the dictionary consists of a list of values (more than 1 message can be received on a callback)
-
-```
-K subscribetmp_solace(K callbackFunction);
-```
-
-Creates and subscribes to a temp queue. These do not remain when the client session ends. Only this client will be a consumer of the endpoint. Can typically be used as a reply-to endpoint for client communications.
-
-Reference subscribepersistent_solace for details on the callbackFunction
-
-The function will return the name of the newly created endpoint (which can then be used in other functions)
 
 ```
 K sendack_solace(K flow, K msgid);
@@ -248,10 +238,10 @@ This should be called by the subscriptions callbackFunction to acknowledge the m
 The parameters required can be found in the input to the callbackFunction on the subscription.
 
 ```
-K unsubscribepersistent_solace(K endpointname);
+K unbindqueue_solace(K endpointname);
 ```
 
-Removes subscription created via subscribepersistent_solace.
+Removes subscription/binding created via bindqueue_solace.
 
 ## API doc for REST messaging for Solace
 
