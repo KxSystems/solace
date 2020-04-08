@@ -150,7 +150,7 @@ K subscribetopic_solace(K topic, K isBlocking);
 K unsubscribetopic_solace(K topic);
 
 /**
- * Send data over Solace, using persistent/guaranteed messages on queue
+ * Send data over Solace, using persistent/guaranteed messages 
  *
  * @param destType Should be an int. -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The topic/queue that you want this message to go to
  * @param dest Should be a symbol. The destination send data to (e.g. endpoint name of queue, topic name)
@@ -158,6 +158,21 @@ K unsubscribetopic_solace(K topic);
  * @param correlationId Can be a symbol of character array. The Solace Correlation ID
  */
 K sendpersistent_solace(K destType, K dest, K data, K correlationId);
+
+/**
+ * Sends a guaranteed request message. This expects an end-to-end reply from the client that receives the message
+ * 
+ * @param destType Should be an int. -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The topic/queue that you want this message to go to
+ * @param dest Should be a symbol. The destination send data to (e.g. endpoint name of queue, topic name)
+ * @param data Can be a symbol of character array. The payload of the message.
+ * @param timeout Integer type representing milliseconds to wait/block, must be greater than 0
+ * @param replyType Should be an int. -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The topic/queue that you wish a reply to this message to go to
+ * @param replyDest Should be a symbol. The topic/queue that you wish a reply to this message to go to (empty for default session topic)
+ * @return Returns a byte list of message received, containing the payload. Otherwise will be an int
+ * to indicate the return code. If value 7, the reply wasnt received. 
+ * 
+ */
+K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyType, K replydest);
 
 /**
  * Subscribes to a queue. The callback function provided will be called by the API whenever a message is received on the subscription
