@@ -218,10 +218,12 @@ Used for sending guaranteed messages that require a sync reply.  Returns a byte 
 ### Flow Binding
 
 ```
-K bindqueue_solace(K endpointname, K callbackFunction);
+K bindqueue_solace(K bindProps, K callbackFunction);
 ```
 
-The endpoint symbol specifies the queue endpoint that is the target of the bind.
+The bindProps value defines a dictionary of symbol for Solace supported bind properties & values e.g. 
+
+``(`FLOW_BIND_BLOCKING;`FLOW_BIND_ENTITY_ID;`FLOW_ACKMODE;`FLOW_BIND_NAME)!(`1;`2;`1;`MYQUEUE)``
 
 The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
 

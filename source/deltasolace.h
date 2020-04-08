@@ -177,14 +177,14 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
 /**
  * Subscribes/Binds to an endpoint (e.g. queue). The callback function provided will be called by the API whenever a message is received on the subscription
  *
- * @param endpointname The endpoint queue name
+ * @param bindProps TODO reference for properties. A dictionary of flow configuration properties with values.
  * @param callbackFunction The kdb function to call for each received message. The callback function will use 7 params - original destination type, 
  * original destination name, reply destination type, reply destination name, correlationid, data. 
  * Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), destination name is a string (subscription name), 
  * Reply Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), reply destination name is a string,
  * correlationid is a string, and data is a string (payload)
  */
-K bindqueue_solace(K endpointname, K callbackFunction);
+K bindqueue_solace(K bindProps, K callbackFunction);
 
 /**
  * Sends an acknowledgment on the specified Flow.
