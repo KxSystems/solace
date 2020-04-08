@@ -913,52 +913,41 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
     return ki(retCode);
 }
 
-K bindqueue_solace(K endpointname, K callbackFunction)
+K bindqueue_solace(K bindProps, K callbackFunction)
 {
     CHECK_SESSION_CREATED;
-    CHECK_PARAM_TYPE(endpointname,-KS,"subscribepersistent_solace");
+    CHECK_PARAM_DICT_SYMS(bindProps,"bindqueue_solace");
     CHECK_PARAM_TYPE(callbackFunction,-KS,"subscribepersistent_solace");
 
-    if (GUARANTEED_SUB_INFO.find(endpointname->s) != GUARANTEED_SUB_INFO.end())
-    {
-        printf("[%ld] Solace subscription not being created for %s, as existing subscription to queue exists\n",THREAD_ID,endpointname->s);
-        return ki(SOLCLIENT_OK);
-    }
-
-    solClient_returnCode_t rc = SOLCLIENT_OK;
-    const char* flowProps[20];
-    int         propIndex = 0;
-    solClient_flow_createFuncInfo_t flowFuncInfo = SOLCLIENT_SESSION_CREATEFUNC_INITIALIZER;
     // create callbacks for flow
+    solClient_flow_createFuncInfo_t flowFuncInfo = SOLCLIENT_SESSION_CREATEFUNC_INITIALIZER;
     flowFuncInfo.rxMsgInfo.callback_p = guaranteedSubCallback;
     flowFuncInfo.rxMsgInfo.user_p = NULL;
     flowFuncInfo.eventInfo.callback_p = flowEventCallback;
     flowFuncInfo.eventInfo.user_p = NULL;
-    // create flow properties
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_BLOCKING; // block in createFlow call
-    flowProps[propIndex++] = SOLCLIENT_PROP_ENABLE_VAL;
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_ID; // the type of object to which this flow is bound
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_ENTITY_QUEUE; // for queue subscriptions
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_ACKMODE;
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_ACKMODE_CLIENT;
-    flowProps[propIndex++] = SOLCLIENT_FLOW_PROP_BIND_NAME;
-    flowProps[propIndex++] = endpointname->s;
-    // TODO durable types (?)
-    flowProps[propIndex] = NULL;
 
+    const char** flowProps = createProperties(bindProps);
     solClient_opaqueFlow_pt flow_p; 
-    rc = solClient_session_createFlow((char**)flowProps,session_p,&flow_p,&flowFuncInfo,sizeof(flowFuncInfo));    
+    solClient_returnCode_t rc = solClient_session_createFlow((char**)flowProps,session_p,&flow_p,&flowFuncInfo,sizeof(flowFuncInfo));    
+    free(flowProps);
     if (rc != SOLCLIENT_OK)
     {
         printf("[%ld] Solace subscribepersistent createFlow error %d: %s\n",THREAD_ID,rc,solClient_returnCodeToString(rc));
         return ki(rc); 
     }
 
-    // remember callback function to use for this subscription
+    solClient_destination_t queueDest;
+    if ( ( rc = solClient_flow_getDestination ( flow_p, &queueDest, sizeof ( queueDest ) ) ) != SOLCLIENT_OK )
+    {
+        printf("[%ld] Solace bindqueue_solace getdestination error %d: %s\n",THREAD_ID,rc,solClient_returnCodeToString(rc));
+        return ks((char*)"");
+    }
+
+    // remember callback function to use for this subscription (queueDest.destType is 1 for queue and 3 for tmpqueue)
     GurananteedSubInfo subInfo;
     subInfo.flow_pt = flow_p;
     subInfo.flowKdbCbFunc = callbackFunction->s;
-    GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(endpointname->s,subInfo));
+    GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(queueDest.dest,subInfo));
     return ki(SOLCLIENT_OK);
 }
 
