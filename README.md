@@ -239,6 +239,8 @@ This should be called by the subscriptions callbackFunction to acknowledge the m
 
 The parameters required can be found in the input to the callbackFunction on the subscription.
 
+NOTE: this function is not required using the default auto acknolwedgments, and only required when you wish to take control and run with auto acks off (e.g. FLOW_ACKMODE disabled in the flow binding).
+
 ```
 K unbindqueue_solace(K endpointname);
 ```
