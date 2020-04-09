@@ -225,6 +225,8 @@ The bindProps value defines a dictionary of symbol for Solace supported bind pro
 
 ``(`FLOW_BIND_BLOCKING;`FLOW_BIND_ENTITY_ID;`FLOW_ACKMODE;`FLOW_BIND_NAME)!(`1;`2;`1;`MYQUEUE)``
 
+Possible flow binding properties can be found [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#flowProps) along with default settings.
+
 The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
 
 destType,destName,replyType,replyName,correlationId,flowPtr,msgId,payload
