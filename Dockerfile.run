@@ -1,10 +1,13 @@
 FROM centos:7
 
+RUN yum -y install wget
+RUN yum clean all
+
 COPY q /usr/local/q
 ENV QHOME /usr/local/q
 ENV PATH /usr/local/q/l64:$PATH
 
-ADD solaceapi.tar.gz /usr/local/solaceapi/
+RUN mkdir -p /usr/local/solaceapi/ && cd /usr/local/solaceapi/ && wget https://products.solace.com/download/C_API_LINUX64 && tar xvf C_API_LINUX64 --strip-components=1 && rm C_API_LINUX64
 COPY examples /usr/local/solace
 ENV LD_LIBRARY_PATH /usr/local/solaceapi/lib/:$LD_LIBRARY_PATH
 
