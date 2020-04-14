@@ -4,13 +4,12 @@ RUN yum -y install gcc && \
     yum -y install gcc-c++ && \
     yum -y install cmake && \
     yum -y install make && \
-    yum -y install vim 
+    yum -y install vim && \
+    yum -y install wget
 
 RUN yum clean all
 
-RUN mkdir -p /source/api/ /source/code/
-
-ADD solaceapi.tar.gz /source/api/
+RUN mkdir -p /source/api/ /source/code/ && cd /source/api && wget https://products.solace.com/download/C_API_LINUX64 && tar xvf C_API_LINUX64 --strip-components=1 && rm C_API_LINUX64
 ENV SOLACE_API /source/api/
 WORKDIR /source/code/
 
