@@ -11,6 +11,6 @@ RUN mkdir -p /usr/local/solaceapi/ && cd /usr/local/solaceapi/ && wget https://p
 COPY examples /usr/local/solace
 ENV LD_LIBRARY_PATH /usr/local/solaceapi/lib/:$LD_LIBRARY_PATH
 
-COPY libdeltasolace.so /usr/local/q/l64/
+COPY build/api/lib/libdeltasolace.so /usr/local/q/l64/
 WORKDIR /usr/local/solace/
 CMD ["/bin/bash"]

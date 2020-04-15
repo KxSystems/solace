@@ -14,10 +14,13 @@ Download the Solace C Messaging API ( https://solace.com/downloads/ ).
 Set an environment variable to the location of the unzipped Solace C API.
 For example, on Linux/Mac
 ```
-export SOLACE_API=/home/myuser/solaceapi/
-cmake source
-make
+export SOLACE_API_DIR=/home/myuser/solaceapi/
+cd build
+cmake ../
+make install
 ```
+
+You should then find the resulting files in a newly created api dir, that should reside within the build directory.
 
 ## Running
 
