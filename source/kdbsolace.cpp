@@ -1,4 +1,4 @@
-#include "deltasolace.h"
+#include "kdbsolace.h"
 #include "solclient/solClient.h"
 #include "solclient/solClientMsg.h"
 #include "KdbSolaceEvent.h"
