@@ -30,7 +30,7 @@ struct KdbSolaceEventFlowDetail
     std::string _destName;
 };
 
-struct KdbSolaceEventGuarSubMsg
+struct KdbSolaceEventQueueMsg
 {
     solClient_opaqueMsg_pt  _msg;
     solClient_opaqueFlow_pt _opaqueFlow;
@@ -44,7 +44,7 @@ struct KdbSolaceEvent
     KDB_SOLACE_EVENT_TYPE           _type;
     union
     {
-        KdbSolaceEventGuarSubMsg*       _subMsg;
+        KdbSolaceEventQueueMsg*       _queueMsg;
         KdbSolaceEventFlowDetail*       _flow;
         KdbSolaceEventSessionDetail*    _session;
         solClient_opaqueMsg_pt          _directMsg;
