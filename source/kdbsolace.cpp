@@ -93,13 +93,13 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
         // attempt to send the batch over the pipe
         KdbSolaceEvent msgAndSource;
         msgAndSource._type = GUARANTEED_MSG_EVENT;
-        msgAndSource._event._subMsg = new KdbSolaceEventGuarSubMsg;
-        msgAndSource._event._subMsg->_destName.assign(currentDest->first);
-        msgAndSource._event._subMsg->_vals = (currentDest->second);
+        msgAndSource._event._queueMsg = new KdbSolaceEventQueueMsg;
+        msgAndSource._event._queueMsg->_destName.assign(currentDest->first);
+        msgAndSource._event._queueMsg->_vals = (currentDest->second);
         int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
         if (numWritten != sizeof(msgAndSource))
         {
-            delete (msgAndSource._event._subMsg);
+            delete (msgAndSource._event._queueMsg);
             return;
         }
         BATCH_PER_DESTINATION.erase(currentDest);
@@ -145,7 +145,116 @@ void setReplyTo(K replyType, K replydest, solClient_opaqueMsg_pt msg_p)
     }
 }
 
-K kdbCallback(I d);
+void kdbCallbackSessionEvent(const KdbSolaceEventSessionDetail* event)
+{
+    if (!KDB_SESSION_EVENT_CALLBACK_FUNC.empty())
+    {
+        K eventtype = ki(event->_eventType);
+        K responsecode = ki(event->_responseCode);
+        K eventinfo = kp((char*)event->_eventInfo.c_str()); 
+        K result = k(0, (char*)KDB_SESSION_EVENT_CALLBACK_FUNC.c_str(), eventtype, responsecode, eventinfo, (K)0);
+        if(-128 == result->t)
+        {
+            printf("[%ld] Solace not able to call kdb function %s with received data (eventtype:%d responsecode:%d eventinfo:%s)\n", 
+                    THREAD_ID, 
+                    KDB_SESSION_EVENT_CALLBACK_FUNC.c_str(),
+                    event->_eventType,
+                    event->_responseCode,
+                    event->_eventInfo.c_str());
+        }
+    }
+    delete (event);
+}
+
+void kdbCallbackFlowEvent(const KdbSolaceEventFlowDetail* event)
+{
+    if (!KDB_FLOW_EVENT_CALLBACK_FUNC.empty())
+    {
+        K eventtype = ki(event->_eventType);
+        K responsecode = ki(event->_responseCode);
+        K eventinfo = kp((char*)event->_eventInfo.c_str());
+        K destType = ki(event->_destType);
+        K destName = kp((char*)event->_destName.c_str());
+        K result = k(0, (char*)KDB_FLOW_EVENT_CALLBACK_FUNC.c_str(), eventtype, responsecode, eventinfo, destType, destName, (K)0);
+        if(-128 == result->t)
+            printf("[%ld] Solace not able to call kdb function %s\n", THREAD_ID, KDB_FLOW_EVENT_CALLBACK_FUNC.c_str()); 
+    }
+    delete (event);    
+}
+
+void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
+{
+    if (KDB_DIRECT_MSG_CALLBACK_FUNC.empty())
+    {
+        solClient_msg_free(&msg);
+        return;
+    }
+    const char* destination = "";
+    solClient_destination_t msgDest;
+    if (solClient_msg_getDestination(msg,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
+        destination = msgDest.dest;
+    solClient_destination_t replyDest;
+    bool isRequest = (solClient_msg_getReplyTo(msg,&replyDest,sizeof(replyDest)) == SOLCLIENT_OK);
+    void* dataPtr = NULL;
+    solClient_uint32_t dataSize = 0;
+    solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize);
+    K payload = ktn(KG, dataSize);
+    memcpy(payload->G0, dataPtr, dataSize);
+
+    solClient_bool_t redelivered = solClient_msg_isRedelivered(msg);
+    solClient_bool_t discarded = solClient_msg_isDiscardIndication(msg);
+    solClient_int64_t sendTime = 0;
+    solClient_msg_getSenderTimestamp(msg,&sendTime);
+    if (sendTime>0)
+        sendTime=(sendTime*1000000l)-(946684800l*1000000000l);
+                
+    K keys = ktn(KS,4);
+    kS(keys)[0]=ss((char*)"isRedeliv");
+    kS(keys)[1]=ss((char*)"isDiscard");
+    kS(keys)[2]=ss((char*)"isRequest");
+    kS(keys)[3]=ss((char*)"sendTime");
+    K vals = knk(4,kb(redelivered),kb(discarded),kb(isRequest),ktj(-KP,sendTime));
+    K dict = xD(keys,vals);
+    K replyK = k(0,(char*)KDB_DIRECT_MSG_CALLBACK_FUNC.c_str(),ks((char*)destination),payload,dict,(K)0);
+    if ((isRequest && replyK!=NULL) && (replyK->t == KG || replyK->t == -KS || replyK->t == KC))
+    {
+        solClient_opaqueMsg_pt replyMsg = NULL;
+        solClient_msg_alloc (&replyMsg);
+        solClient_msg_setBinaryAttachment ( replyMsg, getData(replyK), getDataSize(replyK));
+        if (solClient_session_sendReply(session_p,msg,replyMsg) != SOLCLIENT_OK)
+            solClient_msg_free(&replyMsg);
+    }
+    solClient_msg_free(&msg);
+}
+
+void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
+{
+    std::map<std::string,GurananteedSubInfo>::const_iterator it = GUARANTEED_SUB_INFO.find(msgEvent->_destName);
+    if (it == GUARANTEED_SUB_INFO.end())
+    {
+        printf ( "[%ld] Solace received callback message on flow with no callback function subscription:%s)\n", THREAD_ID, msgEvent->_destName.c_str());
+        // clean up the sub item
+        delete (msgEvent);
+        return;
+    }
+        
+    K keys = ktn(KS,8);
+    kS(keys)[0]=ss((char*)"destType");
+    kS(keys)[1]=ss((char*)"destName");
+    kS(keys)[2]=ss((char*)"replyType");
+    kS(keys)[3]=ss((char*)"replyName");
+    kS(keys)[4]=ss((char*)"correlationId");
+    kS(keys)[5]=ss((char*)"flowPtr");
+    kS(keys)[6]=ss((char*)"msgId");
+    kS(keys)[7]=ss((char*)"payload");
+    K dict = xD(keys, msgEvent->_vals);
+    K result = k(0, (char*)it->second.flowKdbCbFunc.c_str(), dict, (K)0);
+    if(-128 == result->t)
+        printf("[%ld] Solace not able to call kdb function %s with received data (destination:%s)\n", THREAD_ID, it->second.flowKdbCbFunc.c_str(), msgEvent->_destName.c_str());
+        
+    // clean up the sub item
+    delete (msgEvent);
+}
 
 K kdbCallback(I d)
 {
@@ -161,117 +270,23 @@ K kdbCallback(I d)
         }
         if (msgAndSource._type == SESSION_EVENT)
         {
-            if (!KDB_SESSION_EVENT_CALLBACK_FUNC.empty())
-            {
-                K eventtype = ki(msgAndSource._event._session->_eventType);
-                K responsecode = ki(msgAndSource._event._session->_responseCode);
-                K eventinfo = kp((char*)msgAndSource._event._session->_eventInfo.c_str()); 
-                K result = k(0, (char*)KDB_SESSION_EVENT_CALLBACK_FUNC.c_str(), eventtype, responsecode, eventinfo, (K)0);
-                if(-128 == result->t)
-                {
-                    printf("[%ld] Solace not able to call kdb function %s with received data (eventtype:%d responsecode:%d eventinfo:%s)\n", 
-                                    THREAD_ID, 
-                                    KDB_SESSION_EVENT_CALLBACK_FUNC.c_str(),
-                                    msgAndSource._event._session->_eventType,
-                                    msgAndSource._event._session->_responseCode,
-                                    msgAndSource._event._session->_eventInfo.c_str());
-                }
-            }
-            delete (msgAndSource._event._session);
+            kdbCallbackSessionEvent(msgAndSource._event._session);
             return (K)0;
         }
         else if (msgAndSource._type == FLOW_EVENT)
         {
-            if (!KDB_FLOW_EVENT_CALLBACK_FUNC.empty())
-            {
-                K eventtype = ki(msgAndSource._event._flow->_eventType);
-                K responsecode = ki(msgAndSource._event._flow->_responseCode);
-                K eventinfo = kp((char*)msgAndSource._event._flow->_eventInfo.c_str());
-                K destType = ki(msgAndSource._event._flow->_destType);
-                K destName = kp((char*)msgAndSource._event._flow->_destName.c_str());
-                K result = k(0, (char*)KDB_FLOW_EVENT_CALLBACK_FUNC.c_str(), eventtype, responsecode, eventinfo, destType, destName, (K)0);
-                if(-128 == result->t)
-                {
-                    printf("[%ld] Solace not able to call kdb function %s\n", THREAD_ID, KDB_FLOW_EVENT_CALLBACK_FUNC.c_str()); 
-                }
-            }
-            delete (msgAndSource._event._flow);
+            kdbCallbackFlowEvent(msgAndSource._event._flow);
             return (K)0;
         }
         else if (msgAndSource._type == DIRECT_MSG_EVENT)
         {
-            solClient_opaqueMsg_pt msg = msgAndSource._event._directMsg;
-            if (KDB_DIRECT_MSG_CALLBACK_FUNC.empty())
-            {
-                solClient_msg_free(&msg);
-                return (K)0;
-            }
-            const char* destination = "";
-            solClient_destination_t msgDest;
-            if (solClient_msg_getDestination(msg,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
-                destination = msgDest.dest;
-            solClient_destination_t replyDest;
-            bool isRequest = (solClient_msg_getReplyTo(msg,&replyDest,sizeof(replyDest)) == SOLCLIENT_OK);
-            void* dataPtr = NULL;
-            solClient_uint32_t dataSize = 0;
-            solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize);
-            K payload = ktn(KG, dataSize);
-            memcpy(payload->G0, dataPtr, dataSize);
-
-            solClient_bool_t redelivered = solClient_msg_isRedelivered(msg);
-            solClient_bool_t discarded = solClient_msg_isDiscardIndication(msg);
-            solClient_int64_t sendTime = 0;
-            solClient_msg_getSenderTimestamp(msg,&sendTime);
-            if (sendTime>0)
-                sendTime=(sendTime*1000000l)-(946684800l*1000000000l);
-                
-            K keys = ktn(KS,4);
-            kS(keys)[0]=ss((char*)"isRedeliv");
-            kS(keys)[1]=ss((char*)"isDiscard");
-            kS(keys)[2]=ss((char*)"isRequest");
-            kS(keys)[3]=ss((char*)"sendTime");
-            K vals = knk(4,kb(redelivered),kb(discarded),kb(isRequest),ktj(-KP,sendTime));
-            K dict = xD(keys,vals);
-            K replyK = k(0,(char*)KDB_DIRECT_MSG_CALLBACK_FUNC.c_str(),ks((char*)destination),payload,dict,(K)0);
-            if ((isRequest && replyK!=NULL) && (replyK->t == KG || replyK->t == -KS || replyK->t == KC))
-            {
-                solClient_opaqueMsg_pt replyMsg = NULL;
-                solClient_msg_alloc (&replyMsg);
-                solClient_msg_setBinaryAttachment ( replyMsg, getData(replyK), getDataSize(replyK));
-                if (solClient_session_sendReply(session_p,msg,replyMsg) != SOLCLIENT_OK)
-                    solClient_msg_free(&replyMsg);
-            }
-            solClient_msg_free(&msg);
+            kdbCallbackDirectMsgEvent(msgAndSource._event._directMsg);
             return (K)0;
         }
         else if (msgAndSource._type != GUARANTEED_MSG_EVENT)
             return (K)0;
         
-        std::map<std::string,GurananteedSubInfo>::const_iterator it = GUARANTEED_SUB_INFO.find(msgAndSource._event._subMsg->_destName);
-        if (it == GUARANTEED_SUB_INFO.end())
-        {
-            printf ( "[%ld] Solace received callback message on flow with no callback function subscription:%s)\n", THREAD_ID, msgAndSource._event._subMsg->_destName.c_str());
-            // clean up the sub item
-            delete (msgAndSource._event._subMsg);
-            return (K)0;
-        }
-        
-        K keys = ktn(KS,8);
-        kS(keys)[0]=ss((char*)"destType");
-        kS(keys)[1]=ss((char*)"destName");
-        kS(keys)[2]=ss((char*)"replyType");
-        kS(keys)[3]=ss((char*)"replyName");
-        kS(keys)[4]=ss((char*)"correlationId");
-        kS(keys)[5]=ss((char*)"flowPtr");
-        kS(keys)[6]=ss((char*)"msgId");
-        kS(keys)[7]=ss((char*)"payload");
-        K dict = xD(keys, msgAndSource._event._subMsg->_vals);
-        K result = k(0, (char*)it->second.flowKdbCbFunc.c_str(), dict, (K)0);
-        if(-128 == result->t)
-            printf("[%ld] Solace not able to call kdb function %s with received data (destination:%s)\n", THREAD_ID, it->second.flowKdbCbFunc.c_str(), msgAndSource._event._subMsg->_destName.c_str());
-        
-        // clean up the sub item
-        delete (msgAndSource._event._subMsg);
+        kdbCallbackQueueMsgEvent(msgAndSource._event._queueMsg);
     }
     return (K)0;
 }
@@ -304,8 +319,8 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
 
     KdbSolaceEvent msgAndSource;
     msgAndSource._type = GUARANTEED_MSG_EVENT;
-    msgAndSource._event._subMsg = new KdbSolaceEventGuarSubMsg;
-    msgAndSource._event._subMsg->_destName.assign(destination.dest);
+    msgAndSource._event._queueMsg = new KdbSolaceEventQueueMsg;
+    msgAndSource._event._queueMsg->_destName.assign(destination.dest);
     std::string tmpDest;
     tmpDest.assign(destination.dest);
     // replyType
@@ -337,12 +352,12 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
         // not baching - yet
         K vals = createBatch();
         addMsgToBatch(&(vals), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
-        msgAndSource._event._subMsg->_vals = vals;
+        msgAndSource._event._queueMsg->_vals = vals;
         int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
         if (numWritten != sizeof(msgAndSource))
         {
             // start batching now
-            delete (msgAndSource._event._subMsg);
+            delete (msgAndSource._event._queueMsg);
             BATCH_PER_DESTINATION.insert(std::make_pair(tmpDest, vals));
 
             solClient_returnCode_t rc;
@@ -357,7 +372,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
         if (it == BATCH_PER_DESTINATION.end())
             it = BATCH_PER_DESTINATION.insert(it,std::make_pair(tmpDest, createBatch()));
         addMsgToBatch(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
-        delete (msgAndSource._event._subMsg);
+        delete (msgAndSource._event._queueMsg);
         return SOLCLIENT_CALLBACK_OK;
     }
 }
