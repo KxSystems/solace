@@ -6,7 +6,7 @@ project(solacekdb)
 set(CMAKE_BUILD_TYPE Release)
 
 set(MY_LIBRARY_NAME kdbsolace)
-file(GLOB CPP_FILES source/*.c)
+file(GLOB CPP_FILES source/*.cpp)
 set_source_files_properties(${CPP_FILES} PROPERTIES LANGUAGE CXX)
 
 include_directories (
@@ -22,7 +22,7 @@ add_library (${MY_LIBRARY_NAME} SHARED ${CPP_FILES})
 target_link_libraries(${MY_LIBRARY_NAME} solclient)
 
 set_target_properties(${MY_LIBRARY_NAME} PROPERTIES
-    PUBLIC_HEADER source/deltasolace.h)
+    PUBLIC_HEADER source/kdbsolace.h)
 
 
 install(TARGETS ${MY_LIBRARY_NAME}
