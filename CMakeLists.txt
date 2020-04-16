@@ -5,9 +5,8 @@ set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DKXVER=3")
 project(solacekdb)
 set(CMAKE_BUILD_TYPE Release)
 
-set(MY_LIBRARY_NAME deltasolace)
+set(MY_LIBRARY_NAME kdbsolace)
 file(GLOB CPP_FILES source/*.c)
-#set(source_files test.cpp)
 set_source_files_properties(${CPP_FILES} PROPERTIES LANGUAGE CXX)
 
 include_directories (

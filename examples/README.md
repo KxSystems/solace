@@ -4,7 +4,8 @@
 
 Add C solace client library to your LD_LIBRARY_PATH environment variable.
 
-Place the libdeltasolace.so (from your release) into the same directory as your 'q' executable.
+Place the libkdbsolace.so (from your release) into the same directory as your 'q' executable.
+Place solace.q into your KDB+ installation directory.
 
 ## Running Examples
 
