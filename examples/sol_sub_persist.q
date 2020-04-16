@@ -20,7 +20,7 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 .solace.init_solace[soloptions]
 
 / receiving and acknowledging a persistent msg (TODO loop over times when >1 msg)
-subUpdate:{[r] 0N!("RECEIVED MSG: ####";r;" payload: ";`char$first r`payload);.solace.sendack_solace[first r`flowPtr;first r`msgId]};
+subUpdate:{[r] 0N!("RECEIVED MSG: ####";r;" payload: ";{`char$x}r`payload);.solace.sendack_solace'[r`flowPtr;r`msgId]};
 
 bindopts:(`FLOW_BIND_BLOCKING;`FLOW_BIND_ENTITY_ID;`FLOW_ACKMODE;`FLOW_BIND_NAME)!(`1;`2;`2;`$first params`destname)
 
