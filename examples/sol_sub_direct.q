@@ -1,3 +1,5 @@
+\l solace.q
+
 \c 25 1000
 
 default_nm:`host`vpn`user`pass`topic
@@ -5,15 +7,6 @@ default_val:(enlist "host.docker.internal";enlist "default";enlist "admin";enlis
 params:.Q.def[default_nm!default_val].Q.opt .z.x
 
 soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$first params`host;`$first params`vpn;`$first params`user;`$first params`pass);
-
-/ initialise the solace api function
-.solace.setsessioncallback_solace:`libdeltasolace 2:(`setsessioncallback_solace;1)
-.solace.setflowcallback_solace:`libdeltasolace 2:(`setflowcallback_solace;1)
-.solace.init_solace:`libdeltasolace 2:(`init_solace;1)
-.solace.callbacktopic_solace:`libdeltasolace 2:(`callbacktopic_solace;1)
-.solace.subscribetopic_solace:`libdeltasolace 2:(`subscribetopic_solace;2)
-.solace.unsubscribetopic_solace:`libdeltasolace 2:(`unsubscribetopic_solace;1)
-.solace.destroy_solace:`libdeltasolace 2:(`destroy_solace;1)
 
 / setup session event callbacks
 sessionUpdate:{[eventType;responseCode;eventInfo]r:enlist each (`int$eventType;responseCode;eventInfo);0N!("SESSION EVENT: ####";r);r};
