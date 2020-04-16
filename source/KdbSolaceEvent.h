@@ -8,7 +8,7 @@
 
 typedef enum
 {
-    GUARANTEED_MSG_EVENT,
+    QUEUE_MSG_EVENT,
     DIRECT_MSG_EVENT,
     SESSION_EVENT,
     FLOW_EVENT

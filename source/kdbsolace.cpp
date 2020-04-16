@@ -73,12 +73,12 @@ static std::string KDB_SESSION_EVENT_CALLBACK_FUNC;
 static std::string KDB_FLOW_EVENT_CALLBACK_FUNC;
 static std::string KDB_DIRECT_MSG_CALLBACK_FUNC;
 
-struct GurananteedSubInfo
+struct QueueSubInfo
 {
     solClient_opaqueFlow_pt flow_pt;
     std::string             flowKdbCbFunc;
 };
-static std::map<std::string, GurananteedSubInfo> GUARANTEED_SUB_INFO;
+static std::map<std::string, QueueSubInfo> QUEUE_SUB_INFO;
 
 typedef std::map<std::string, K> batchInfoMap;
 static batchInfoMap BATCH_PER_DESTINATION;
@@ -92,7 +92,7 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
         ++itr;
         // attempt to send the batch over the pipe
         KdbSolaceEvent msgAndSource;
-        msgAndSource._type = GUARANTEED_MSG_EVENT;
+        msgAndSource._type = QUEUE_MSG_EVENT;
         msgAndSource._event._queueMsg = new KdbSolaceEventQueueMsg;
         msgAndSource._event._queueMsg->_destName.assign(currentDest->first);
         msgAndSource._event._queueMsg->_vals = (currentDest->second);
@@ -229,8 +229,8 @@ void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
 
 void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
 {
-    std::map<std::string,GurananteedSubInfo>::const_iterator it = GUARANTEED_SUB_INFO.find(msgEvent->_destName);
-    if (it == GUARANTEED_SUB_INFO.end())
+    std::map<std::string,QueueSubInfo>::const_iterator it = QUEUE_SUB_INFO.find(msgEvent->_destName);
+    if (it == QUEUE_SUB_INFO.end())
     {
         printf ( "[%ld] Solace received callback message on flow with no callback function subscription:%s)\n", THREAD_ID, msgEvent->_destName.c_str());
         // clean up the sub item
@@ -268,25 +268,29 @@ K kdbCallback(I d)
             printf("[%ld] Solace problem reading data from pipe, got %ld bytes, expecting %ld\n", THREAD_ID, copied, sizeof(msgAndSource));
             return (K)0;
         }
-        if (msgAndSource._type == SESSION_EVENT)
+        switch(msgAndSource._type)
         {
-            kdbCallbackSessionEvent(msgAndSource._event._session);
-            return (K)0;
+            case SESSION_EVENT:
+            {
+                kdbCallbackSessionEvent(msgAndSource._event._session);
+                break;
+            }
+            case FLOW_EVENT:
+            {
+                kdbCallbackFlowEvent(msgAndSource._event._flow);
+                break;
+            }
+            case DIRECT_MSG_EVENT:
+            {
+                kdbCallbackDirectMsgEvent(msgAndSource._event._directMsg);
+                break;
+            }
+            case QUEUE_MSG_EVENT:
+            {
+                kdbCallbackQueueMsgEvent(msgAndSource._event._queueMsg);
+                break;
+            }
         }
-        else if (msgAndSource._type == FLOW_EVENT)
-        {
-            kdbCallbackFlowEvent(msgAndSource._event._flow);
-            return (K)0;
-        }
-        else if (msgAndSource._type == DIRECT_MSG_EVENT)
-        {
-            kdbCallbackDirectMsgEvent(msgAndSource._event._directMsg);
-            return (K)0;
-        }
-        else if (msgAndSource._type != GUARANTEED_MSG_EVENT)
-            return (K)0;
-        
-        kdbCallbackQueueMsgEvent(msgAndSource._event._queueMsg);
     }
     return (K)0;
 }
@@ -318,7 +322,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
     }
 
     KdbSolaceEvent msgAndSource;
-    msgAndSource._type = GUARANTEED_MSG_EVENT;
+    msgAndSource._type = QUEUE_MSG_EVENT;
     msgAndSource._event._queueMsg = new KdbSolaceEventQueueMsg;
     msgAndSource._event._queueMsg->_destName.assign(destination.dest);
     std::string tmpDest;
@@ -959,10 +963,10 @@ K bindqueue_solace(K bindProps, K callbackFunction)
     }
 
     // remember callback function to use for this subscription (queueDest.destType is 1 for queue and 3 for tmpqueue)
-    GurananteedSubInfo subInfo;
+    QueueSubInfo subInfo;
     subInfo.flow_pt = flow_p;
     subInfo.flowKdbCbFunc = callbackFunction->s;
-    GUARANTEED_SUB_INFO.insert(std::pair<std::string,GurananteedSubInfo>(queueDest.dest,subInfo));
+    QUEUE_SUB_INFO.insert(std::pair<std::string,QueueSubInfo>(queueDest.dest,subInfo));
     return ki(SOLCLIENT_OK);
 }
 
@@ -981,9 +985,9 @@ K unbindqueue_solace(K endpointname)
     CHECK_PARAM_TYPE(endpointname,-KS,"unsubscribepersistent_solace");
     
     const char* subname =  endpointname->s;
-    std::map<std::string,GurananteedSubInfo>::iterator it;
-    it = GUARANTEED_SUB_INFO.find(subname);
-    if (it == GUARANTEED_SUB_INFO.end())
+    std::map<std::string,QueueSubInfo>::iterator it;
+    it = QUEUE_SUB_INFO.find(subname);
+    if (it == QUEUE_SUB_INFO.end())
     {
         printf("[%ld] Solace unsubscribe for subscription %s that doesnt exist\n", THREAD_ID, subname);
         return krr((S)"Solace unsubscribe for subscription that doesnt exist");
@@ -995,7 +999,7 @@ K unbindqueue_solace(K endpointname)
     else
         printf("[%ld] Solace subscription removed for %s\n", THREAD_ID, subname);
 
-    GUARANTEED_SUB_INFO.erase(it);
+    QUEUE_SUB_INFO.erase(it);
 
     return ki(retCode);
 }
