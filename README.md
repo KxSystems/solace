@@ -45,7 +45,7 @@ Add the lib directory to the LD_LIBRARY_PATH environment variable e.g. if unzipp
 
 export LD_LIBRARY_PATH /usr/local/solaceapi/lib/:$LD_LIBRARY_PATH
 
-The supplied (or built) libdeltasolace.so should be placed in the KDB+ folder e.g. if on a Linux 64bit machine with KDB+ installed in /usr/local/q, place the shared library into /usr/local/q/l64/.
+The supplied (or built) libkdbsolace.so should be placed in the KDB+ folder e.g. if on a Linux 64bit machine with KDB+ installed in /usr/local/q, place the shared library into /usr/local/q/l64/.
 
 The q script to load the solace API (solace.q) can be placed in the current working directory or within the KDB+ install directory.
 
