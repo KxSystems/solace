@@ -5,6 +5,7 @@
 #include <string.h>
 #include <string>
 #include <map>
+#include <queue>
 #include "log/ThreadID.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -80,15 +81,29 @@ struct QueueSubInfo
 };
 static std::map<std::string, QueueSubInfo> QUEUE_SUB_INFO;
 
-typedef std::map<std::string, K> batchInfoMap;
-static batchInfoMap BATCH_PER_DESTINATION;
+typedef std::map<std::string, K> batchQueueMsgs;
+static batchQueueMsgs BATCH_PER_DESTINATION;
+
+typedef std::queue<solClient_opaqueMsg_pt> batchDirectMsgs;
+static batchDirectMsgs BATCH_DIRECT_MSGS;
 
 static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, solClient_fd_t fd, solClient_fdEvent_t events, void *user_p)
 {
-    batchInfoMap::iterator itr = BATCH_PER_DESTINATION.begin();
+    while (!BATCH_DIRECT_MSGS.empty())
+    {
+        solClient_opaqueMsg_pt msg_p = BATCH_DIRECT_MSGS.front();
+        KdbSolaceEvent msgAndSource;
+        msgAndSource._type = DIRECT_MSG_EVENT;
+        msgAndSource._event._directMsg=msg_p;
+        ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+        if (numWritten != sizeof(msgAndSource))
+            return;
+        BATCH_DIRECT_MSGS.pop();
+    }
+    batchQueueMsgs::iterator itr = BATCH_PER_DESTINATION.begin();
     while (itr!=BATCH_PER_DESTINATION.end())
     {
-        batchInfoMap::iterator currentDest = itr;
+        batchQueueMsgs::iterator currentDest = itr;
         ++itr;
         // attempt to send the batch over the pipe
         KdbSolaceEvent msgAndSource;
@@ -105,6 +120,13 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
         BATCH_PER_DESTINATION.erase(currentDest);
     }
     solClient_context_unregisterForFdEvents(opaqueContext_p,fd,events);
+}
+
+static void watchSocket()
+{
+    solClient_returnCode_t rc;
+    if ((rc = solClient_context_registerForFdEvents(context,CALLBACK_PIPE[1],SOLCLIENT_FD_EVENT_WRITE,socketWrittableCbFunc,NULL)) != SOLCLIENT_OK)
+        printf("[%ld] Solace problem create fd monitor\n", THREAD_ID);
 }
 
 K createBatch()
@@ -298,14 +320,19 @@ K kdbCallback(I d)
 /* The message receive callback function is mandatory for session creation. Gets called with msgs from direct subscriptions. */
 solClient_rxMsgCallback_returnCode_t defaultSubCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_opaqueMsg_pt msg_p, void *user_p )
 {
+    if (!BATCH_DIRECT_MSGS.empty())
+    {
+        BATCH_DIRECT_MSGS.push(msg_p);
+        return SOLCLIENT_CALLBACK_TAKE_MSG;
+    }
     KdbSolaceEvent msgAndSource;
     msgAndSource._type = DIRECT_MSG_EVENT;
     msgAndSource._event._directMsg=msg_p;
     ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
     if (numWritten != sizeof(msgAndSource))
     {
-        //TODO printf("Blocked!\n");
-        return SOLCLIENT_CALLBACK_OK;
+        BATCH_DIRECT_MSGS.push(msg_p);
+        watchSocket();
     }
     // take control of the msg_p memory
     return SOLCLIENT_CALLBACK_TAKE_MSG;
@@ -364,16 +391,13 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
             // start batching now
             delete (msgAndSource._event._queueMsg);
             BATCH_PER_DESTINATION.insert(std::make_pair(tmpDest, vals));
-
-            solClient_returnCode_t rc;
-            if ((rc = solClient_context_registerForFdEvents(context,CALLBACK_PIPE[1],SOLCLIENT_FD_EVENT_WRITE,socketWrittableCbFunc,NULL)) != SOLCLIENT_OK)
-                printf("[%ld] Solace problem create fd monitor\n", THREAD_ID);
+            watchSocket();
         }
         return SOLCLIENT_CALLBACK_OK;
     }
     else
     {
-        batchInfoMap::iterator it = BATCH_PER_DESTINATION.find(tmpDest);
+        batchQueueMsgs::iterator it = BATCH_PER_DESTINATION.find(tmpDest);
         if (it == BATCH_PER_DESTINATION.end())
             it = BATCH_PER_DESTINATION.insert(it,std::make_pair(tmpDest, createBatch()));
         addMsgToBatch(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
