@@ -60,7 +60,7 @@ See contents of the [examples](examples/README.md) folder
 ### Event Notification
 
 ```
-.solace.setsessioncallback_solace[callbackFunction]
+.solace.setsessioncallback[callbackFunction]
 ```
 
 Associates the provided function with session events such as connection notifications or session errors (e.g. too many subscriptions, login failure, etc)
@@ -72,7 +72,7 @@ The callback function should take 3 parameters
 - eventInfo: string type. Further information about the event
 
 ```
-.solace.setflowcallback_solace[callbackFunction]
+.solace.setflowcallback[callbackFunction]
 ```
 
 Associates the provided function with flow events.
@@ -88,7 +88,7 @@ The callback function should take 5 parameters
 ### Connecting
 
 ```
-.solace.init_solace[options]
+.solace.init[options]
 ```
 
 Consumes a dictionary of options, consisting of symbol to symbol mappings. A list of possible session properties are listed [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/group___session_props.html). Common properties are SESSION_HOST,  SESSION_VPN_NAME, SESSION_USERNAME, SESSION_PASSWORD, SESSION_RECONNECT_RETRIES.
@@ -100,7 +100,7 @@ Connects and creates a session.
 ### Disconnecting
 
 ```
-.solace.destroy_solace[unused]
+.solace.destroy[unused]
 ```
 
 Destroys the previously created session.
@@ -108,19 +108,19 @@ Destroys the previously created session.
 ### Utility Functions
 
 ```
-.solace.version_solace[unused]
+.solace.version[unused]
 ```
 Returns a dictionary of Solace API version info. Useful for checking current deployment/build versions.
 
 
 ```
-.solace.iscapable_solace[capabilityName]
+.solace.iscapable[capabilityName]
 ```
 
 Requires a capability as a symbol/string, from the list of features listed [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#sessioncapabilities). Returns a boolean on whether that capability is enabled for the current session.
 
 ```
-.solace.getcapability_solace[capabilityName]
+.solace.getcapability[capabilityName]
 ```
 
 Requires a capability as a symbol/string, from the list of features that your solace environment may provide as listed [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#sessioncapabilities) e.g. version information, whether you can create temporary endpoints, etc..
@@ -133,7 +133,7 @@ These functions may be used to create or destroy endpoints from the KDB+ applica
 *Endpoint management must be enabled for the user in order to use this functionality*
 
 ```
-.solace.createendpoint_solace[options;provFlags]
+.solace.createendpoint[options;provFlags]
 ```
 
 Provision, on the appliance, a durable Queue or Topic Endpoint using the current Session
@@ -142,19 +142,19 @@ Options type should be a dictionary of symbols. The names use the Solace endpoin
 The provFlags param (type int) indicates the provision flags used by solace (Ref: https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#provisionflags )
 
 ```
-.solace.destroyendpoint_solace[options;provFlags]
+.solace.destroyendpoint[options;provFlags]
 ```
 
-Destroys endpoints. Reference createendpoint_solace. 
+Destroys endpoints. Reference createendpoint. 
 
 ```
-.solace.endpointtopicsubscribe_solace[options;provFlags;topic]
+.solace.endpointtopicsubscribe[options;provFlags;topic]
 ```
 
 Add a Topic subscription to an existing endpoint. Can be added to queues or remote clients. 
 
 ```
-.solace.endpointtopicunsubscribe_solace[options;provFlags;topic]
+.solace.endpointtopicunsubscribe[options;provFlags;topic]
 ```
 
 Removes a Topic subscription to an existing endpoint. Can be used with queues or remote clients. 
@@ -162,7 +162,7 @@ Removes a Topic subscription to an existing endpoint. Can be used with queues or
 ### Direct Messaging
 
 ```
-.solace.senddirect_solace[topic;data]
+.solace.senddirect[topic;data]
 ```
 
 Used for sending direct messages (Ref: https://docs.solace.com/PubSub-Basics/Direct-Messages.htm ). Each message will automatically be populated with message eliding eligibility enabled and dead message queue (DMQ) eligibility enabled.
@@ -171,7 +171,7 @@ Used for sending direct messages (Ref: https://docs.solace.com/PubSub-Basics/Dir
 - data: string/symbol/byte data, which forms the basis of the payload for the message
 
 ```
- .solace.senddirectrequest_solace[topic;data;timeout;replyType;replydest]
+ .solace.senddirectrequest[topic;data;timeout;replyType;replydest]
 ```
 
 Used for sending direct messages that require a sync reply.  Returns a byte list of message received, containing the payload. Otherwise will be an int to indicate the return code. If value 7, the reply wasnt received. 
@@ -185,7 +185,7 @@ Used for sending direct messages that require a sync reply.  Returns a byte list
 ### Topic Subscriptions
 
 ```
-.solace.callbacktopic_solace[cb]
+.solace.callbacktopic[cb]
 ```
 
 Registers a q function that should be called on receipt of messages from topic subscriptions. If the dict contains a value of true for the key 'isRequest', the function should return with the response message contents (type byte list) as this is an indication that the sender is requesting a reply.
@@ -193,7 +193,7 @@ Registers a q function that should be called on receipt of messages from topic s
 * cb: A q function that takes 3 parameters. The function should accept 3 parameters, symbol destination, byte list for payload and a dictionary of msg values
 
 ```
-.solace.subscribetopic_solace[topic;isBlocking]
+.solace.subscribetopic[topic;isBlocking]
 ```
 
 Subscribes to a topic. Solace format wildcards can be used in the topic subscription value.
@@ -202,7 +202,7 @@ Subscribes to a topic. Solace format wildcards can be used in the topic subscrip
 * isBlocking: True to block until confirm or true to get session event callback on sub activation
 
 ```
-.solace.unsubscribetopic_solace[topic]
+.solace.unsubscribetopic[topic]
 ```
 
 As above, but unsubscribes from existing subscription
@@ -210,7 +210,7 @@ As above, but unsubscribes from existing subscription
 ### Persistent/Garanteed Message Publishing
 
 ```
-.solace.sendpersistent_solace[destType;dest;data;correlationId]
+.solace.sendpersistent[destType;dest;data;correlationId]
 ```
 
 Used for sending persistent messages onto a queue or topic. 
@@ -221,7 +221,7 @@ Used for sending persistent messages onto a queue or topic.
 - correlationId<optional>: can be NULL. Correlation Id is carried in the Solace message headers unmodified by the appliance and may be used for peer-to-peer message synchronization
 
 ```
-.solace.sendpersistentrequest_solace[destType;dest;data;timeout;replyType;replydest]
+.solace.sendpersistentrequest[destType;dest;data;timeout;replyType;replydest]
 ```
 
 Used for sending guaranteed messages that require a sync reply.  Returns a byte list of message received, containing the payload. Otherwise will be an int to indicate the return code. If value 7, the reply wasnt received. 
@@ -236,7 +236,7 @@ Used for sending guaranteed messages that require a sync reply.  Returns a byte 
 ### Flow Binding
 
 ```
-.solace.bindqueue_solace[bindProps;callbackFunction]
+.solace.bindqueue[bindProps;callbackFunction]
 ```
 
 The bindProps value defines a dictionary of symbol for Solace supported bind properties & values e.g. 
@@ -252,7 +252,7 @@ destType,destName,replyType,replyName,correlationId,flowPtr,msgId,payload
 Each value in the dictionary consists of a list of values (more than 1 message can be received on a callback)
 
 ```
-.solace.sendack_solace[flow;msgid]
+.solace.sendack[flow;msgid]
 ```
 
 This should be called by the subscriptions callbackFunction to acknowledge the message has been processed, in order to prevent the message from being consuming on a subsequent subscription.
@@ -262,10 +262,10 @@ The parameters required can be found in the input to the callbackFunction on the
 NOTE: this function is not required using the default auto acknolwedgments, and only required when you wish to take control and run with auto acks off (e.g. FLOW_ACKMODE disabled in the flow binding).
 
 ```
-.solace.unbindqueue_solace[endpointname]
+.solace.unbindqueue[endpointname]
 ```
 
-Removes subscription/binding created via bindqueue_solace.
+Removes subscription/binding created via bindqueue.
 
 ## API doc for REST messaging for Solace
 
