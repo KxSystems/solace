@@ -349,6 +349,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
     if (solClient_msg_getBinaryAttachmentPtr(msg_p, &dataPtr, &dataSize) != SOLCLIENT_OK)
     {
         printf("[%ld] Solace issue getting binary attachment from received message (id:%lld, type:%d, subscription:%s, msg destination:%s, msg destination type:%d)\n", THREAD_ID, msgId, destination.destType, tmpDest.c_str(), msgDestName, msgDest.destType);
+        delete (msgAndSource._event._queueMsg);
         return SOLCLIENT_CALLBACK_OK;
     }
     if(BATCH_PER_DESTINATION.empty())
