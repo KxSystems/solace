@@ -49,11 +49,11 @@ The supplied (or built) libkdbsolace.so should be placed in the KDB+ folder e.g.
 
 The q script to load the solace API (solace.q) can be placed in the current working directory or within the KDB+ install directory.
 
-See examples on how to use the interface.
+See examples and API documentation on how to tailor the interface for your needs.
 
 #### Examples
 
-See contents of the [examples](examples/README.md) folder
+See contents of the [examples](examples/) folder and its associated [README.md](examples/README.md) for further details.
 
 ## API Doc for Solace Messaging
 
@@ -189,7 +189,11 @@ Used for sending direct messages that require a sync reply.  Returns a byte list
 
 Registers a q function that should be called on receipt of messages from topic subscriptions. If the dict contains a value of true for the key 'isRequest', the function should return with the response message contents (type byte list) as this is an indication that the sender is requesting a reply.
 
-* cb: A q function that takes 3 parameters. The function should accept 3 parameters, symbol destination, byte list for payload and a dictionary of msg values
+* cb: A q function that takes 3 parameters. The function should accept 3 parameters, symbol destination, byte list for payload and a dictionary of msg values. The dictionary consists of:
+  * isRedeliv: boolean thats states the redelivered status
+  * isDiscard: Returns true if one or more messages have been discarded prior to the current message, otherwise it returns false. This indicates congestion discards only, and is not affected by message eliding
+  * isRequest: boolean that states if the client is expecting a reply (in which case the function should return a byte array for the response)
+  * sendTime: timestamp of the clients send time (if populated)
 
 ```
 .solace.subscribeTopic[topic;isBlocking]
