@@ -73,13 +73,9 @@ static int CALLBACK_PIPE[2];
 static std::string KDB_SESSION_EVENT_CALLBACK_FUNC;
 static std::string KDB_FLOW_EVENT_CALLBACK_FUNC;
 static std::string KDB_DIRECT_MSG_CALLBACK_FUNC;
+static std::string KDB_QUEUE_MSG_CALLBACK_FUNC;
 
-struct QueueSubInfo
-{
-    solClient_opaqueFlow_pt flow_pt;
-    std::string             flowKdbCbFunc;
-};
-static std::map<std::string, QueueSubInfo> QUEUE_SUB_INFO;
+static std::map<std::string, solClient_opaqueFlow_pt> QUEUE_SUB_INFO;
 
 typedef std::map<std::string, K> batchQueueMsgs;
 static batchQueueMsgs BATCH_PER_DESTINATION;
@@ -251,15 +247,11 @@ void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
 
 void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
 {
-    std::map<std::string,QueueSubInfo>::const_iterator it = QUEUE_SUB_INFO.find(msgEvent->_destName);
-    if (it == QUEUE_SUB_INFO.end())
-    {
-        printf ( "[%ld] Solace received callback message on flow with no callback function subscription:%s)\n", THREAD_ID, msgEvent->_destName.c_str());
-        // clean up the sub item
-        delete (msgEvent);
+    if (KDB_QUEUE_MSG_CALLBACK_FUNC.empty())
         return;
-    }
-        
+    if (QUEUE_SUB_INFO.find(msgEvent->_destName) == QUEUE_SUB_INFO.end())
+        return;
+
     K keys = ktn(KS,8);
     kS(keys)[0]=ss((char*)"destType");
     kS(keys)[1]=ss((char*)"destName");
@@ -270,9 +262,9 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     kS(keys)[6]=ss((char*)"msgId");
     kS(keys)[7]=ss((char*)"payload");
     K dict = xD(keys, msgEvent->_vals);
-    K result = k(0, (char*)it->second.flowKdbCbFunc.c_str(), dict, (K)0);
+    K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), dict, (K)0);
     if(-128 == result->t)
-        printf("[%ld] Solace not able to call kdb function %s with received data (destination:%s)\n", THREAD_ID, it->second.flowKdbCbFunc.c_str(), msgEvent->_destName.c_str());
+        printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), msgEvent->_destName.c_str());
         
     // clean up the sub item
     delete (msgEvent);
@@ -957,11 +949,19 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
     return ki(retCode);
 }
 
-K bindqueue_solace(K bindProps, K callbackFunction)
+K callbackqueue_solace(K func)
+{
+    CHECK_PARAM_STRING_TYPE(func,"callbackqueue_solace");
+    char cbStr[getStringSize(func)];
+    setString(cbStr,func,sizeof(cbStr));
+    KDB_QUEUE_MSG_CALLBACK_FUNC.assign(cbStr);
+    return ki(SOLCLIENT_OK);
+}
+
+K bindqueue_solace(K bindProps)
 {
     CHECK_SESSION_CREATED;
     CHECK_PARAM_DICT_SYMS(bindProps,"bindqueue_solace");
-    CHECK_PARAM_TYPE(callbackFunction,-KS,"subscribepersistent_solace");
 
     // create callbacks for flow
     solClient_flow_createFuncInfo_t flowFuncInfo = SOLCLIENT_SESSION_CREATEFUNC_INITIALIZER;
@@ -987,11 +987,7 @@ K bindqueue_solace(K bindProps, K callbackFunction)
         return ks((char*)"");
     }
 
-    // remember callback function to use for this subscription (queueDest.destType is 1 for queue and 3 for tmpqueue)
-    QueueSubInfo subInfo;
-    subInfo.flow_pt = flow_p;
-    subInfo.flowKdbCbFunc = callbackFunction->s;
-    QUEUE_SUB_INFO.insert(std::pair<std::string,QueueSubInfo>(queueDest.dest,subInfo));
+    QUEUE_SUB_INFO.insert(std::pair<std::string,solClient_opaqueFlow_pt>(queueDest.dest,flow_p));
     return ki(SOLCLIENT_OK);
 }
 
@@ -1010,14 +1006,14 @@ K unbindqueue_solace(K endpointname)
     CHECK_PARAM_TYPE(endpointname,-KS,"unsubscribepersistent_solace");
     
     const char* subname =  endpointname->s;
-    std::map<std::string,QueueSubInfo>::iterator it;
+    std::map<std::string,solClient_opaqueFlow_pt>::iterator it;
     it = QUEUE_SUB_INFO.find(subname);
     if (it == QUEUE_SUB_INFO.end())
     {
         printf("[%ld] Solace unsubscribe for subscription %s that doesnt exist\n", THREAD_ID, subname);
         return krr((S)"Solace unsubscribe for subscription that doesnt exist");
     }
-    solClient_opaqueFlow_pt flow_pt = it->second.flow_pt;
+    solClient_opaqueFlow_pt flow_pt = it->second;
     solClient_returnCode_t retCode = solClient_flow_destroy(&flow_pt);
     if (retCode != SOLCLIENT_OK)
         printf("[%ld] Solace unsubscribe failure for %s\n", THREAD_ID, subname);

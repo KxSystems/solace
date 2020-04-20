@@ -239,7 +239,17 @@ Used for sending guaranteed messages that require a sync reply.  Returns a byte 
 ### Flow Binding
 
 ```
-.solace.bindQueue[bindProps;callbackFunction]
+.solace.callbackQueue[callbackFunction]
+```
+
+The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
+
+destType,destName,replyType,replyName,correlationId,flowPtr,msgId,payload
+
+Each value in the dictionary consists of a list of values (more than 1 message can be received on a callback)
+
+```
+.solace.bindQueue[bindProps]
 ```
 
 The bindProps value defines a dictionary of symbol for Solace supported bind properties & values e.g. 
@@ -247,12 +257,6 @@ The bindProps value defines a dictionary of symbol for Solace supported bind pro
 ``(`FLOW_BIND_BLOCKING;`FLOW_BIND_ENTITY_ID;`FLOW_ACKMODE;`FLOW_BIND_NAME)!(`1;`2;`1;`MYQUEUE)``
 
 Possible flow binding properties can be found [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#flowProps) along with default settings.
-
-The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
-
-destType,destName,replyType,replyName,correlationId,flowPtr,msgId,payload
-
-Each value in the dictionary consists of a list of values (more than 1 message can be received on a callback)
 
 ```
 .solace.sendAck[flow;msgid]
