@@ -19,9 +19,10 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 / perform solace actions
 .solace.init[soloptions]
 
-/ receiving and reply to a direct msg
-subUpdate:{[x;y;z] 0N!("RECEIVED MSG: #### Destination ";x;" Payload ";`char$y;" Dict ";z);`byte$"reply contents"};
-.solace.callbackTopic[`subUpdate]
+/ receiving and reply to a direct msg (reply only if incoming msg has isRequest set to true)
+subUpdate:{[x;y;z] 0N!("RECEIVED MSG: #### Destination ";x;" Payload ";`char$y;" Dict ";z);$[z`isRequest;`byte$"reply contents";0i]};
+.solace.callbackTopic[`subUpdate] 
+
 .solace.subscribeTopic[`$first params`topic;1b]
 
 / dont disconnect or quit, in order to receive any messages
