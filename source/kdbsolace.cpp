@@ -133,24 +133,22 @@ K createBatch()
     jk(&(vals), ktn(KI,0)); //[2] replytype
     jk(&(vals), knk(0));    //[3] replyname
     jk(&(vals), knk(0));    //[4] correlation id
-    jk(&(vals), ktn(KJ,0)); //[5] flowptr (ie. subscription object)
-    jk(&(vals), ktn(KJ,0)); //[6] message id (used for acks)
-    jk(&(vals), knk(0));    //[7] payload
+    jk(&(vals), ktn(KJ,0)); //[5] message id (used for acks)
+    jk(&(vals), knk(0));    //[6] payload
     return vals;
 }
 
-int addMsgToBatch(K* batch, int destType, const char* destName, int replyType, const char* replyName, const char* correlationId, solClient_opaqueFlow_pt flowPtr, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
+int addMsgToBatch(K* batch, int destType, const char* destName, int replyType, const char* replyName, const char* correlationId, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
 {
     ja(&(((K*)(*batch)->G0)[0]), &destType);
     jk(&(((K*)(*batch)->G0)[1]), kp((char*)destName));
     ja(&(((K*)(*batch)->G0)[2]), &replyType);
     jk(&(((K*)(*batch)->G0)[3]), kp((char*)replyName));
     jk(&(((K*)(*batch)->G0)[4]), kp((char*)correlationId));
-    ja(&(((K*)(*batch)->G0)[5]), &flowPtr); // flowptr (ie. subscription object)
-    ja(&(((K*)(*batch)->G0)[6]), &msgId);   // message id (used for acks)
+    ja(&(((K*)(*batch)->G0)[5]), &msgId);   // message id (used for acks)
     K payload = ktn(KG, dataSize);
     memcpy(payload->G0, data, dataSize);
-    jk(&(((K*)(*batch)->G0)[7]), payload);
+    jk(&(((K*)(*batch)->G0)[6]), payload);
     return (((K*)(*batch)->G0)[0])->n;
 }
 
@@ -252,15 +250,14 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     if (QUEUE_SUB_INFO.find(msgEvent->_destName) == QUEUE_SUB_INFO.end())
         return;
 
-    K keys = ktn(KS,8);
+    K keys = ktn(KS,7);
     kS(keys)[0]=ss((char*)"destType");
     kS(keys)[1]=ss((char*)"destName");
     kS(keys)[2]=ss((char*)"replyType");
     kS(keys)[3]=ss((char*)"replyName");
     kS(keys)[4]=ss((char*)"correlationId");
-    kS(keys)[5]=ss((char*)"flowPtr");
-    kS(keys)[6]=ss((char*)"msgId");
-    kS(keys)[7]=ss((char*)"payload");
+    kS(keys)[5]=ss((char*)"msgId");
+    kS(keys)[6]=ss((char*)"payload");
     K dict = xD(keys, msgEvent->_vals);
     K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), dict, (K)0);
     if(-128 == result->t)
@@ -375,7 +372,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
     {
         // not baching - yet
         K vals = createBatch();
-        addMsgToBatch(&(vals), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
+        addMsgToBatch(&(vals), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
         msgAndSource._event._queueMsg->_vals = vals;
         int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
         if (numWritten != sizeof(msgAndSource))
@@ -392,7 +389,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
         batchQueueMsgs::iterator it = BATCH_PER_DESTINATION.find(tmpDest);
         if (it == BATCH_PER_DESTINATION.end())
             it = BATCH_PER_DESTINATION.insert(it,std::make_pair(tmpDest, createBatch()));
-        addMsgToBatch(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, opaqueFlow_p, msgId, dataPtr, dataSize);
+        addMsgToBatch(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
         delete (msgAndSource._event._queueMsg);
         return SOLCLIENT_CALLBACK_OK;
     }
