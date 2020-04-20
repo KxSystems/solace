@@ -259,14 +259,14 @@ The bindProps value defines a dictionary of symbol for Solace supported bind pro
 Possible flow binding properties can be found [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#flowProps) along with default settings.
 
 ```
-.solace.sendAck[flow;msgid]
+.solace.sendAck[endpointname;msgid]
 ```
 
 This should be called by the subscriptions callbackFunction to acknowledge the message has been processed, in order to prevent the message from being consuming on a subsequent subscription.
 
 The parameters required can be found in the input to the callbackFunction on the subscription.
 
-NOTE: this function is not required using the default auto acknolwedgments, and only required when you wish to take control and run with auto acks off (e.g. FLOW_ACKMODE disabled in the flow binding).
+NOTE: only required when you wish to take control and run with auto acks off (e.g. FLOW_ACKMODE disabled in the flow binding).
 
 ```
 .solace.unBindQueue[endpointname]
