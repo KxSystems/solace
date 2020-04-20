@@ -10,18 +10,18 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$f
 
 / setup session event callbacks
 sessionUpdate:{[eventType;responseCode;eventInfo]r:enlist each (`int$eventType;responseCode;eventInfo);0N!("SESSION EVENT: ####";r);r};
-.solace.setsessioncallback[`sessionUpdate];
+.solace.setSessionCallback[`sessionUpdate];
 
 / setup flow event callbacks
 flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`int$eventType;responseCode;eventInfo;destType;destName);0N!("FLOW EVENT: ####";r);r};
-.solace.setflowcallback[`flowUpdate];
+.solace.setFlowCallback[`flowUpdate];
 
 / perform solace actions
 .solace.init[soloptions]
 
 / receiving and reply to a direct msg
 subUpdate:{[x;y;z] 0N!("RECEIVED MSG: #### Destination ";x;" Payload ";`char$y;" Dict ";z);`byte$"reply contents"};
-.solace.callbacktopic[`subUpdate]
-.solace.subscribetopic[`$first params`topic;1b]
+.solace.callbackTopic[`subUpdate]
+.solace.subscribeTopic[`$first params`topic;1b]
 
 / dont disconnect or quit, in order to receive any messages

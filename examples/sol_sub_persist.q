@@ -10,20 +10,20 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$f
 
 / setup session event callbacks
 sessionUpdate:{[eventType;responseCode;eventInfo]r:enlist each (`int$eventType;responseCode;eventInfo);0N!("SESSION EVENT: ####";r);r};
-.solace.setsessioncallback[`sessionUpdate];
+.solace.setSessionCallback[`sessionUpdate];
 
 / setup flow event callbacks
 flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`int$eventType;responseCode;eventInfo;destType;destName);0N!("FLOW EVENT: ####";r);r};
-.solace.setflowcallback[`flowUpdate];
+.solace.setFlowCallback[`flowUpdate];
 
 / perform solace actions
 .solace.init[soloptions]
 
 / receiving and acknowledging a persistent msg (TODO loop over times when >1 msg)
-subUpdate:{[r] 0N!("RECEIVED MSG: ####";r;" payload: ";{`char$x}r`payload);.solace.sendack'[r`flowPtr;r`msgId]};
+subUpdate:{[r] 0N!("RECEIVED MSG: ####";r;" payload: ";{`char$x}r`payload);.solace.sendAck'[r`flowPtr;r`msgId]};
 
 bindopts:(`FLOW_BIND_BLOCKING;`FLOW_BIND_ENTITY_ID;`FLOW_ACKMODE;`FLOW_BIND_NAME)!(`1;`2;`2;`$first params`destname)
 
-.solace.bindqueue[bindopts;`subUpdate]
+.solace.bindQueue[bindopts;`subUpdate]
 
 / dont disconnect or quit, in order to receive any messages
