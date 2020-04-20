@@ -8,18 +8,18 @@ soloptions:`SESSION_HOST`SESSION_VPN_NAME`SESSION_USERNAME`SESSION_PASSWORD!(`$f
 
 / setup session event callbacks
 sessionUpdate:{[eventType;responseCode;eventInfo]r:enlist each (`int$eventType;responseCode;eventInfo);0N!("SESSION EVENT: ####";r);r};
-.solace.setsessioncallback[`sessionUpdate];
+.solace.setSessionCallback[`sessionUpdate];
 
 / setup flow event callbacks
 flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`int$eventType;responseCode;eventInfo;destType;destName);0N!("FLOW EVENT: ####";r);r};
-.solace.setflowcallback[`flowUpdate];
+.solace.setFlowCallback[`flowUpdate];
 
 ("API Version Info: ";.solace.version[1i])
 
 .solace.init[soloptions]
 
 c:`$first params`opt
-(c;.solace.getcapability[c])
+(c;.solace.getCapability[c])
 
 .solace.destroy[1i]
 
