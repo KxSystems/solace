@@ -991,11 +991,16 @@ K bindqueue_solace(K bindProps)
     return ki(SOLCLIENT_OK);
 }
 
-K sendack_solace(K flow, K msgid)
+K sendack_solace(K endpointname, K msgid)
 {
-    CHECK_PARAM_TYPE(flow,-KJ,"sendack_solace");
     CHECK_PARAM_TYPE(msgid,-KJ,"sendack_solace");
-    solClient_opaqueFlow_pt solFlow = (solClient_opaqueFlow_pt)flow->j;
+    CHECK_PARAM_STRING_TYPE(endpointname,"sendack_solace");
+    char endpointStr[getStringSize(endpointname)];
+    setString(endpointStr,endpointname,sizeof(endpointStr));
+    std::map<std::string, solClient_opaqueFlow_pt>::iterator flowIt = QUEUE_SUB_INFO.find(endpointStr);
+    if (flowIt == QUEUE_SUB_INFO.end())
+        return ki(SOLCLIENT_FAIL);
+    solClient_opaqueFlow_pt solFlow = (solClient_opaqueFlow_pt)flowIt->second;
     solClient_msgId_t solMsgId = msgid->j;
     solClient_returnCode_t retCode = solClient_flow_sendAck (solFlow, solMsgId); 
     return ki(retCode);

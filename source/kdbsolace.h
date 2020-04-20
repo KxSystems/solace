@@ -196,11 +196,11 @@ K bindqueue_solace(K bindProps);
 
 /**
  * Sends an acknowledgment on the specified Flow.
- * @param flow The flow that the msg was originall received on. Type long.
+ * @param endpointname The endpoint that the msg was originally received on. Type symbol or string.
  * @param msgid The msg id of the mesage to be acknowledged. Type long.
  * @return A integer with value 0 if ok, -1 for failure
  */
-K sendack_solace(K flow, K msgid);
+K sendack_solace(K endpointname, K msgid);
 
 /**
  * Unsubscribes from a queue 
