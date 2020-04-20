@@ -244,7 +244,7 @@ Used for sending guaranteed messages that require a sync reply.  Returns a byte 
 
 The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
 
-destType,destName,replyType,replyName,correlationId,flowPtr,msgId,payload
+destType,destName,replyType,replyName,correlationId,msgId,payload
 
 Each value in the dictionary consists of a list of values (more than 1 message can be received on a callback)
 
