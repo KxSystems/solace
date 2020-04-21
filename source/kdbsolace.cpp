@@ -9,7 +9,6 @@
 #include "log/ThreadID.h"
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <fcntl.h>
 
 /**
@@ -77,8 +76,8 @@ static std::string KDB_QUEUE_MSG_CALLBACK_FUNC;
 
 static std::map<std::string, solClient_opaqueFlow_pt> QUEUE_SUB_INFO;
 
-typedef std::map<std::string, K> batchQueueMsgs;
-static batchQueueMsgs BATCH_PER_DESTINATION;
+typedef std::queue<KdbSolaceEventQueueMsg> batchQueueMsgs;
+static batchQueueMsgs BATCH_QUEUE_MSGS;
 
 typedef std::queue<solClient_opaqueMsg_pt> batchDirectMsgs;
 static batchDirectMsgs BATCH_DIRECT_MSGS;
@@ -96,24 +95,17 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
             return;
         BATCH_DIRECT_MSGS.pop();
     }
-    batchQueueMsgs::iterator itr = BATCH_PER_DESTINATION.begin();
-    while (itr!=BATCH_PER_DESTINATION.end())
+    while (!BATCH_QUEUE_MSGS.empty())
     {
-        batchQueueMsgs::iterator currentDest = itr;
-        ++itr;
-        // attempt to send the batch over the pipe
+        KdbSolaceEventQueueMsg event = BATCH_QUEUE_MSGS.front();
         KdbSolaceEvent msgAndSource;
         msgAndSource._type = QUEUE_MSG_EVENT;
-        msgAndSource._event._queueMsg = new KdbSolaceEventQueueMsg;
-        msgAndSource._event._queueMsg->_destName.assign(currentDest->first);
-        msgAndSource._event._queueMsg->_vals = (currentDest->second);
+        msgAndSource._event._queueMsg._msg = event._msg;
+        msgAndSource._event._queueMsg._flow = event._flow;
         int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
         if (numWritten != sizeof(msgAndSource))
-        {
-            delete (msgAndSource._event._queueMsg);
             return;
-        }
-        BATCH_PER_DESTINATION.erase(currentDest);
+        BATCH_QUEUE_MSGS.pop();
     }
     solClient_context_unregisterForFdEvents(opaqueContext_p,fd,events);
 }
@@ -247,8 +239,62 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
 {
     if (KDB_QUEUE_MSG_CALLBACK_FUNC.empty())
         return;
-    if (QUEUE_SUB_INFO.find(msgEvent->_destName) == QUEUE_SUB_INFO.end())
+
+    solClient_opaqueMsg_pt msg = msgEvent->_msg;
+    solClient_opaqueFlow_pt flow = msgEvent->_flow;
+    // check flow still going
+    std::map<std::string, solClient_opaqueFlow_pt>::iterator itr = QUEUE_SUB_INFO.begin();
+    while (itr!=QUEUE_SUB_INFO.end())
+    {
+        if (itr->second == flow)
+            break;
+        ++itr;
+    }
+    if (itr==QUEUE_SUB_INFO.end())
+    {
+        // not current subscribed
+        solClient_msg_free(&msg);
         return;
+    }
+
+    solClient_destination_t flowDest = {SOLCLIENT_NULL_DESTINATION,NULL};
+    const char* flowDestName = "";
+    if (solClient_flow_getDestination(flow,&flowDest,sizeof(flowDest)) == SOLCLIENT_OK)
+        flowDestName = flowDest.dest;
+
+    if (itr->first.compare(flowDestName)!=0)
+    {
+        // not current subscribed
+        solClient_msg_free(&msg);
+        return;
+    }
+
+    // replyType
+    solClient_destination_t msgDest = {SOLCLIENT_NULL_DESTINATION,NULL};
+    solClient_destination_t replyto = {SOLCLIENT_NULL_DESTINATION,NULL};
+    const char* msgDestName = "";
+    if (solClient_msg_getDestination(msg,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
+        msgDestName = msgDest.dest;
+    const char* replyToName = "";
+    if (solClient_msg_getReplyTo(msg,&replyto,sizeof(msgDest)) == SOLCLIENT_OK)
+        replyToName = replyto.dest;
+
+    const char* correlationid = "";
+    solClient_msg_getCorrelationId(msg,&correlationid);
+    solClient_msgId_t msgId = 0;
+    solClient_msg_getMsgId(msg,&msgId);
+    // payload 
+    void* dataPtr = NULL;
+    solClient_uint32_t dataSize = 0;
+    if (solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize) != SOLCLIENT_OK)
+    {
+        printf("[%ld] Solace issue getting binary attachment from received message (id:%lld, type:%d, subscription:%s, msg destination:%s, msg destination type:%d)\n", THREAD_ID, msgId, flowDest.destType, flowDestName, msgDestName, msgDest.destType);
+        solClient_msg_free(&msg);
+        return;
+    }
+
+    K vals = createBatch();
+    addMsgToBatch(&(vals), flowDest.destType, flowDestName, replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
 
     K keys = ktn(KS,7);
     kS(keys)[0]=ss((char*)"flowDestType");
@@ -258,13 +304,12 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     kS(keys)[4]=ss((char*)"correlationId");
     kS(keys)[5]=ss((char*)"msgId");
     kS(keys)[6]=ss((char*)"payload");
-    K dict = xD(keys, msgEvent->_vals);
+    K dict = xD(keys, vals);
     K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), dict, (K)0);
     if(-128 == result->t)
-        printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), msgEvent->_destName.c_str());
-        
-    // clean up the sub item
-    delete (msgEvent);
+        printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, KDB_QUEUE_MSG_CALLBACK_FUNC.c_str());
+
+    solClient_msg_free(&msg);
 }
 
 K kdbCallback(I d)
@@ -298,7 +343,7 @@ K kdbCallback(I d)
             }
             case QUEUE_MSG_EVENT:
             {
-                kdbCallbackQueueMsgEvent(msgAndSource._event._queueMsg);
+                kdbCallbackQueueMsgEvent(&msgAndSource._event._queueMsg);
                 break;
             }
         }
@@ -329,70 +374,24 @@ solClient_rxMsgCallback_returnCode_t defaultSubCallback ( solClient_opaqueSessio
 
 solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_opaqueMsg_pt msg_p, void *user_p )
 {
-    //solClient_msg_dump(msg_p,NULL,0);
-    solClient_destination_t flowDest;
-    if (solClient_flow_getDestination(opaqueFlow_p,&flowDest,sizeof(flowDest)) != SOLCLIENT_OK)
-    {
-        printf("[%ld] Solace cant get destination of flow\n",THREAD_ID);
-        return SOLCLIENT_CALLBACK_OK;
-    }
-
     KdbSolaceEvent msgAndSource;
     msgAndSource._type = QUEUE_MSG_EVENT;
-    msgAndSource._event._queueMsg = new KdbSolaceEventQueueMsg;
-    msgAndSource._event._queueMsg->_destName.assign(flowDest.dest);
-    std::string flowDestName;
-    flowDestName.assign(flowDest.dest);
-    // replyType
-    solClient_destination_t msgDest = {SOLCLIENT_NULL_DESTINATION,NULL};
-    solClient_destination_t replyto = {SOLCLIENT_NULL_DESTINATION,NULL};
-    const char* msgDestName = "";
-    if (solClient_msg_getDestination(msg_p,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
-        msgDestName = msgDest.dest;
-    const char* replyToName = "";
-    if (solClient_msg_getReplyTo(msg_p,&replyto,sizeof(msgDest)) == SOLCLIENT_OK)
-        replyToName = replyto.dest;
+    msgAndSource._event._queueMsg._msg=msg_p;
+    msgAndSource._event._queueMsg._flow=opaqueFlow_p;
 
-    // correlationid
-    const char* correlationid = "";
-    solClient_msg_getCorrelationId(msg_p,&correlationid);
-    // msgId
-    solClient_msgId_t msgId = 0;
-    solClient_msg_getMsgId(msg_p,&msgId);
-    // payload 
-    void* dataPtr = NULL;
-    solClient_uint32_t dataSize = 0;
-    if (solClient_msg_getBinaryAttachmentPtr(msg_p, &dataPtr, &dataSize) != SOLCLIENT_OK)
+    if (!BATCH_QUEUE_MSGS.empty())
     {
-        printf("[%ld] Solace issue getting binary attachment from received message (id:%lld, type:%d, subscription:%s, msg destination:%s, msg destination type:%d)\n", THREAD_ID, msgId, flowDest.destType, flowDestName.c_str(), msgDestName, msgDest.destType);
-        delete (msgAndSource._event._queueMsg);
-        return SOLCLIENT_CALLBACK_OK;
+        BATCH_QUEUE_MSGS.push(msgAndSource._event._queueMsg);
+        return SOLCLIENT_CALLBACK_TAKE_MSG;
     }
-    if(BATCH_PER_DESTINATION.empty())
+    ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+    if (numWritten != sizeof(msgAndSource))
     {
-        // not baching - yet
-        K vals = createBatch();
-        addMsgToBatch(&(vals), flowDest.destType, flowDestName.c_str(), replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
-        msgAndSource._event._queueMsg->_vals = vals;
-        int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
-        if (numWritten != sizeof(msgAndSource))
-        {
-            // start batching now
-            delete (msgAndSource._event._queueMsg);
-            BATCH_PER_DESTINATION.insert(std::make_pair(flowDestName, vals));
-            watchSocket();
-        }
-        return SOLCLIENT_CALLBACK_OK;
+        BATCH_QUEUE_MSGS.push(msgAndSource._event._queueMsg);
+        watchSocket();
     }
-    else
-    {
-        batchQueueMsgs::iterator it = BATCH_PER_DESTINATION.find(flowDestName);
-        if (it == BATCH_PER_DESTINATION.end())
-            it = BATCH_PER_DESTINATION.insert(it,std::make_pair(flowDestName, createBatch()));
-        addMsgToBatch(&(it->second), flowDest.destType, flowDestName.c_str(), replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
-        delete (msgAndSource._event._queueMsg);
-        return SOLCLIENT_CALLBACK_OK;
-    }
+    // take control of the msg_p memory
+    return SOLCLIENT_CALLBACK_TAKE_MSG;
 }
 
 void flowEventCallback ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_flow_eventCallbackInfo_pt eventInfo_p, void *user_p )
