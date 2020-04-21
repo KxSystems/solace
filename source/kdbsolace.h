@@ -179,11 +179,11 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
  * Sets the KDB+ function that should be called on receipt of each direct msg created via
  * bindqueue_solace. 
  * @param cb Can be a symbol or string, which is the name of the q function to call on receipt of
- * each message. The callback function will use 7 params - original destination type, 
- * original destination name, reply destination type, reply destination name, correlationid, data. 
+ * each message. The callback function will use 2 params, byte array payload and a dict - Dict consists of original destination type, 
+ * original destination name, reply destination type, reply destination name, correlationid. 
  * Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), destination name is a string (subscription name), 
  * Reply Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), reply destination name is a string,
- * correlationid is a string, and data is a string (payload)
+ * correlationid is a string
  */
 K callbackqueue_solace(K cb);
 

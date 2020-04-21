@@ -242,11 +242,11 @@ Used for sending guaranteed messages that require a sync reply.  Returns a byte 
 .solace.callbackQueue[callbackFunction]
 ```
 
-The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a single parameter, that will be a dictionary with message keys:
+The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a two parameters, first is a byte array for the payload, the second is a dictionary with message keys:
 
-flowDestType,flowDestName,replyType,replyName,correlationId,msgId,payload
+flowDestType,flowDestName,replyType,replyName,correlationId,msgId
 
-Each value in the dictionary consists of a list of values (more than 1 message can be received on a callback)
+Each value in the dictionary consists of a list of values
 
 ```
 .solace.bindQueue[bindProps]
