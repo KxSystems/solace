@@ -302,7 +302,7 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     kS(keys)[4]=ss((char*)"correlationId");
     kS(keys)[5]=ss((char*)"msgId");
     K dict = xD(keys, vals);
-    K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), payload, dict, (K)0);
+    K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), ks((char*)flowDestName), payload, dict, (K)0);
     if(-128 == result->t)
         printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, KDB_QUEUE_MSG_CALLBACK_FUNC.c_str());
 
