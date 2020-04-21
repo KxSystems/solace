@@ -128,8 +128,8 @@ static void watchSocket()
 K createBatch()
 {
     K vals = knk(0);
-    jk(&(vals), ktn(KI, 0));//[0] destination type
-    jk(&(vals), knk(0));    //[1] destination name
+    jk(&(vals), ktn(KI, 0));//[0] flow destination type
+    jk(&(vals), knk(0));    //[1] flow destination name
     jk(&(vals), ktn(KI,0)); //[2] replytype
     jk(&(vals), knk(0));    //[3] replyname
     jk(&(vals), knk(0));    //[4] correlation id
@@ -138,10 +138,10 @@ K createBatch()
     return vals;
 }
 
-int addMsgToBatch(K* batch, int destType, const char* destName, int replyType, const char* replyName, const char* correlationId, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
+int addMsgToBatch(K* batch, int flowDestType, const char* flowDestName, int replyType, const char* replyName, const char* correlationId, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
 {
-    ja(&(((K*)(*batch)->G0)[0]), &destType);
-    jk(&(((K*)(*batch)->G0)[1]), kp((char*)destName));
+    ja(&(((K*)(*batch)->G0)[0]), &flowDestType);
+    jk(&(((K*)(*batch)->G0)[1]), kp((char*)flowDestName));
     ja(&(((K*)(*batch)->G0)[2]), &replyType);
     jk(&(((K*)(*batch)->G0)[3]), kp((char*)replyName));
     jk(&(((K*)(*batch)->G0)[4]), kp((char*)correlationId));
@@ -251,8 +251,8 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
         return;
 
     K keys = ktn(KS,7);
-    kS(keys)[0]=ss((char*)"destType");
-    kS(keys)[1]=ss((char*)"destName");
+    kS(keys)[0]=ss((char*)"flowDestType");
+    kS(keys)[1]=ss((char*)"flowDestName");
     kS(keys)[2]=ss((char*)"replyType");
     kS(keys)[3]=ss((char*)"replyName");
     kS(keys)[4]=ss((char*)"correlationId");
@@ -330,8 +330,8 @@ solClient_rxMsgCallback_returnCode_t defaultSubCallback ( solClient_opaqueSessio
 solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_opaqueMsg_pt msg_p, void *user_p )
 {
     //solClient_msg_dump(msg_p,NULL,0);
-    solClient_destination_t destination;
-    if (solClient_flow_getDestination(opaqueFlow_p,&destination,sizeof(destination)) != SOLCLIENT_OK)
+    solClient_destination_t flowDest;
+    if (solClient_flow_getDestination(opaqueFlow_p,&flowDest,sizeof(flowDest)) != SOLCLIENT_OK)
     {
         printf("[%ld] Solace cant get destination of flow\n",THREAD_ID);
         return SOLCLIENT_CALLBACK_OK;
@@ -340,9 +340,9 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
     KdbSolaceEvent msgAndSource;
     msgAndSource._type = QUEUE_MSG_EVENT;
     msgAndSource._event._queueMsg = new KdbSolaceEventQueueMsg;
-    msgAndSource._event._queueMsg->_destName.assign(destination.dest);
-    std::string tmpDest;
-    tmpDest.assign(destination.dest);
+    msgAndSource._event._queueMsg->_destName.assign(flowDest.dest);
+    std::string flowDestName;
+    flowDestName.assign(flowDest.dest);
     // replyType
     solClient_destination_t msgDest = {SOLCLIENT_NULL_DESTINATION,NULL};
     solClient_destination_t replyto = {SOLCLIENT_NULL_DESTINATION,NULL};
@@ -364,7 +364,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
     solClient_uint32_t dataSize = 0;
     if (solClient_msg_getBinaryAttachmentPtr(msg_p, &dataPtr, &dataSize) != SOLCLIENT_OK)
     {
-        printf("[%ld] Solace issue getting binary attachment from received message (id:%lld, type:%d, subscription:%s, msg destination:%s, msg destination type:%d)\n", THREAD_ID, msgId, destination.destType, tmpDest.c_str(), msgDestName, msgDest.destType);
+        printf("[%ld] Solace issue getting binary attachment from received message (id:%lld, type:%d, subscription:%s, msg destination:%s, msg destination type:%d)\n", THREAD_ID, msgId, flowDest.destType, flowDestName.c_str(), msgDestName, msgDest.destType);
         delete (msgAndSource._event._queueMsg);
         return SOLCLIENT_CALLBACK_OK;
     }
@@ -372,24 +372,24 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
     {
         // not baching - yet
         K vals = createBatch();
-        addMsgToBatch(&(vals), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
+        addMsgToBatch(&(vals), flowDest.destType, flowDestName.c_str(), replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
         msgAndSource._event._queueMsg->_vals = vals;
         int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
         if (numWritten != sizeof(msgAndSource))
         {
             // start batching now
             delete (msgAndSource._event._queueMsg);
-            BATCH_PER_DESTINATION.insert(std::make_pair(tmpDest, vals));
+            BATCH_PER_DESTINATION.insert(std::make_pair(flowDestName, vals));
             watchSocket();
         }
         return SOLCLIENT_CALLBACK_OK;
     }
     else
     {
-        batchQueueMsgs::iterator it = BATCH_PER_DESTINATION.find(tmpDest);
+        batchQueueMsgs::iterator it = BATCH_PER_DESTINATION.find(flowDestName);
         if (it == BATCH_PER_DESTINATION.end())
-            it = BATCH_PER_DESTINATION.insert(it,std::make_pair(tmpDest, createBatch()));
-        addMsgToBatch(&(it->second), destination.destType, tmpDest.c_str(), replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
+            it = BATCH_PER_DESTINATION.insert(it,std::make_pair(flowDestName, createBatch()));
+        addMsgToBatch(&(it->second), flowDest.destType, flowDestName.c_str(), replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
         delete (msgAndSource._event._queueMsg);
         return SOLCLIENT_CALLBACK_OK;
     }
