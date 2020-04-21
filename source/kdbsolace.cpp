@@ -126,11 +126,10 @@ K createBatch()
     jk(&(vals), knk(0));    //[3] replyname
     jk(&(vals), knk(0));    //[4] correlation id
     jk(&(vals), ktn(KJ,0)); //[5] message id (used for acks)
-    jk(&(vals), knk(0));    //[6] payload
     return vals;
 }
 
-int addMsgToBatch(K* batch, int flowDestType, const char* flowDestName, int replyType, const char* replyName, const char* correlationId, solClient_msgId_t msgId, void* data, solClient_uint32_t dataSize)
+int addMsgToBatch(K* batch, int flowDestType, const char* flowDestName, int replyType, const char* replyName, const char* correlationId, solClient_msgId_t msgId)
 {
     ja(&(((K*)(*batch)->G0)[0]), &flowDestType);
     jk(&(((K*)(*batch)->G0)[1]), kp((char*)flowDestName));
@@ -138,9 +137,6 @@ int addMsgToBatch(K* batch, int flowDestType, const char* flowDestName, int repl
     jk(&(((K*)(*batch)->G0)[3]), kp((char*)replyName));
     jk(&(((K*)(*batch)->G0)[4]), kp((char*)correlationId));
     ja(&(((K*)(*batch)->G0)[5]), &msgId);   // message id (used for acks)
-    K payload = ktn(KG, dataSize);
-    memcpy(payload->G0, data, dataSize);
-    jk(&(((K*)(*batch)->G0)[6]), payload);
     return (((K*)(*batch)->G0)[0])->n;
 }
 
@@ -292,20 +288,21 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
         solClient_msg_free(&msg);
         return;
     }
+    K payload = ktn(KG, dataSize);
+    memcpy(payload->G0, dataPtr, dataSize);
 
     K vals = createBatch();
-    addMsgToBatch(&(vals), flowDest.destType, flowDestName, replyto.destType, replyToName, correlationid, msgId, dataPtr, dataSize);
+    addMsgToBatch(&(vals), flowDest.destType, flowDestName, replyto.destType, replyToName, correlationid, msgId);
 
-    K keys = ktn(KS,7);
+    K keys = ktn(KS,6);
     kS(keys)[0]=ss((char*)"flowDestType");
     kS(keys)[1]=ss((char*)"flowDestName");
     kS(keys)[2]=ss((char*)"replyType");
     kS(keys)[3]=ss((char*)"replyName");
     kS(keys)[4]=ss((char*)"correlationId");
     kS(keys)[5]=ss((char*)"msgId");
-    kS(keys)[6]=ss((char*)"payload");
     K dict = xD(keys, vals);
-    K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), dict, (K)0);
+    K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), payload, dict, (K)0);
     if(-128 == result->t)
         printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, KDB_QUEUE_MSG_CALLBACK_FUNC.c_str());
 
