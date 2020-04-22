@@ -32,8 +32,6 @@ struct KdbSolaceEventFlowDetail
 
 struct KdbSolaceEventQueueMsg
 {
-    //std::string             _destName;
-    //K                       _vals;
     solClient_opaqueMsg_pt  _msg;
     solClient_opaqueFlow_pt _flow;
 };

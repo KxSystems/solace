@@ -128,8 +128,8 @@ The returned type may be symbol, int, bool, etc, depending on the type of capabi
 
 ### EndPoint Management
 
-These functions may be used to create or destroy endpoints from the KDB+ application. In some deployments, end points may already be created for you by an admin.
-*Endpoint management must be enabled for the user in order to use this functionality*
+These functions may be used to create or destroy endpoints from the KDB+ application. In some deployments, end-points may already be created for you by an admin.
+*NOTE: Endpoint management must be enabled for the user in order to use this functionality*
 
 ```
 .solace.createEndpoint[options;provFlags]
