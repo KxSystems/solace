@@ -267,13 +267,14 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     }
     K payload = ktn(KG, dataSize);
     memcpy(payload->G0, dataPtr, dataSize);
-    
-    K keys = ktn(KS,4);
-    kS(keys)[0]=ss((char*)"replyType");
-    kS(keys)[1]=ss((char*)"replyName");
-    kS(keys)[2]=ss((char*)"correlationId");
-    kS(keys)[3]=ss((char*)"msgId");
-    K vals = knk(4,ki(replyto.destType),kp((char*)replyToName),kp((char*)correlationid),kj(msgId));
+    K keys = ktn(KS,6);
+    kS(keys)[0]=ss((char*)"destType");
+    kS(keys)[1]=ss((char*)"destName");
+    kS(keys)[2]=ss((char*)"replyType");
+    kS(keys)[3]=ss((char*)"replyName");
+    kS(keys)[4]=ss((char*)"correlationId");
+    kS(keys)[5]=ss((char*)"msgId");
+    K vals = knk(6,ki(msgDest.destType),kp((char*)msgDestName),ki(replyto.destType),kp((char*)replyToName),kp((char*)correlationid),kj(msgId));
     K dict = xD(keys,vals);
     
     K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), ks((char*)flowDestName), payload, dict, (K)0);
