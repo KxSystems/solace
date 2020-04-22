@@ -244,9 +244,11 @@ Used for sending guaranteed messages that require a sync reply.  Returns a byte 
 
 The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a three parameters, 
 
-- first is a symbol of the flow destination
+- first is a symbol of the flow destination (i.e. the origin queue binded to from which this subscription originated)
 - second is byte array for the payload 
 - third is a dictionary with keys:
+  - destType: Int type. Message destination type, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue.
+  - destName: String type. Message destination name (can be differen from flow dest, e.g. when message was sent to a topic but mapped to a queue from where it was received)
   - replyType: Int type. Reply destination type, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. 
   - replyName: String type. Reply destination name
   - correlationId: String type. Original messages correlationId
