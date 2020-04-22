@@ -180,10 +180,10 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
  * bindqueue_solace. 
  * @param cb Can be a symbol or string, which is the name of the q function to call on receipt of
  * each message. The callback function will use 3 params, queue destination name, byte array payload and a dict - 
- * Dict consists of reply destination type, reply destination name, correlationid. 
+ * Dict consists of reply destination type, reply destination name, correlationid, msgid. 
  * Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), destination name is a string (subscription name), 
  * Reply Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), reply destination name is a string,
- * correlationid is a string
+ * correlationid is a string. msgid is a long
  */
 K callbackqueue_solace(K cb);
 

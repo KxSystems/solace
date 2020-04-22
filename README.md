@@ -220,7 +220,7 @@ Used for sending persistent messages onto a queue or topic.
 
 - destType: should be an int, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. 
 - dest: Destination name of the queue/topic. Symbol type.
-- data: string/symbol/byte data, which forms the basis of the payload for the message
+- data: byte array/string/symbol data, which forms the basis of the payload for the message
 - correlationId<optional>: can be NULL. Correlation Id is carried in the Solace message headers unmodified by the appliance and may be used for peer-to-peer message synchronization
 
 ```
@@ -229,12 +229,12 @@ Used for sending persistent messages onto a queue or topic.
 
 Used for sending guaranteed messages that require a sync reply.  Returns a byte list of message received, containing the payload. Otherwise will be an int to indicate the return code. If value 7, the reply wasnt received. 
 
-- destType: should be an int, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. 
+- destType: Int type, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. 
 - dest: Destination name of the queue/topic. Symbol type.
-- data: string/symbol/byte data, which forms the basis of the payload for the message
-- timeout: integer timeout param that indicate the millisecons to block/wait (must be greater than zero).
-- replyType Should be an int. -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The topic/queue that you wish a reply to this message to go to
-- replyDest Should be a symbol. The topic/queue that you wish a reply to this message to go to (empty for default session topic)
+- data: byte array/string/symbol data array, which forms the basis of the payload for the message
+- timeout: Integer timeout param that indicate the millisecons to block/wait (must be greater than zero).
+- replyType: Integer type. -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The topic/queue that you wish a reply to this message to go to
+- replyDest: Symbol type. The topic/queue that you wish a reply to this message to go to (empty for default session topic)
 
 ### Flow Binding
 
@@ -242,11 +242,15 @@ Used for sending guaranteed messages that require a sync reply.  Returns a byte 
 .solace.callbackQueue[callbackFunction]
 ```
 
-The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a three parameters, first is a symbol of the flow destination, second is byte array for the payload, the third is a dictionary with message keys:
+The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a three parameters, 
 
-replyType,replyName,correlationId,msgId
-
-Each value in the dictionary consists of a list of values
+- first is a symbol of the flow destination
+- second is byte array for the payload 
+- third is a dictionary with keys:
+  - replyType: Int type. Reply destination type, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. 
+  - replyName: String type. Reply destination name
+  - correlationId: String type. Original messages correlationId
+  - msgId: Long type. Used for sending acks (see .solace.sendAck)
 
 ```
 .solace.bindQueue[bindProps]
