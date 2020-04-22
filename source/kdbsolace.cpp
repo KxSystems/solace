@@ -120,23 +120,19 @@ static void watchSocket()
 K createBatch()
 {
     K vals = knk(0);
-    jk(&(vals), ktn(KI, 0));//[0] flow destination type
-    jk(&(vals), knk(0));    //[1] flow destination name
-    jk(&(vals), ktn(KI,0)); //[2] replytype
-    jk(&(vals), knk(0));    //[3] replyname
-    jk(&(vals), knk(0));    //[4] correlation id
-    jk(&(vals), ktn(KJ,0)); //[5] message id (used for acks)
+    jk(&(vals), ktn(KI,0)); //[0] replytype
+    jk(&(vals), knk(0));    //[1] replyname
+    jk(&(vals), knk(0));    //[2] correlation id
+    jk(&(vals), ktn(KJ,0)); //[3] message id (used for acks)
     return vals;
 }
 
-int addMsgToBatch(K* batch, int flowDestType, const char* flowDestName, int replyType, const char* replyName, const char* correlationId, solClient_msgId_t msgId)
+int addMsgToBatch(K* batch, int replyType, const char* replyName, const char* correlationId, solClient_msgId_t msgId)
 {
-    ja(&(((K*)(*batch)->G0)[0]), &flowDestType);
-    jk(&(((K*)(*batch)->G0)[1]), kp((char*)flowDestName));
-    ja(&(((K*)(*batch)->G0)[2]), &replyType);
-    jk(&(((K*)(*batch)->G0)[3]), kp((char*)replyName));
-    jk(&(((K*)(*batch)->G0)[4]), kp((char*)correlationId));
-    ja(&(((K*)(*batch)->G0)[5]), &msgId);   // message id (used for acks)
+    ja(&(((K*)(*batch)->G0)[0]), &replyType);
+    jk(&(((K*)(*batch)->G0)[1]), kp((char*)replyName));
+    jk(&(((K*)(*batch)->G0)[2]), kp((char*)correlationId));
+    ja(&(((K*)(*batch)->G0)[3]), &msgId);   // message id (used for acks)
     return (((K*)(*batch)->G0)[0])->n;
 }
 
@@ -292,15 +288,13 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     memcpy(payload->G0, dataPtr, dataSize);
 
     K vals = createBatch();
-    addMsgToBatch(&(vals), flowDest.destType, flowDestName, replyto.destType, replyToName, correlationid, msgId);
+    addMsgToBatch(&(vals), replyto.destType, replyToName, correlationid, msgId);
 
-    K keys = ktn(KS,6);
-    kS(keys)[0]=ss((char*)"flowDestType");
-    kS(keys)[1]=ss((char*)"flowDestName");
-    kS(keys)[2]=ss((char*)"replyType");
-    kS(keys)[3]=ss((char*)"replyName");
-    kS(keys)[4]=ss((char*)"correlationId");
-    kS(keys)[5]=ss((char*)"msgId");
+    K keys = ktn(KS,4);
+    kS(keys)[0]=ss((char*)"replyType");
+    kS(keys)[1]=ss((char*)"replyName");
+    kS(keys)[2]=ss((char*)"correlationId");
+    kS(keys)[3]=ss((char*)"msgId");
     K dict = xD(keys, vals);
     K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), ks((char*)flowDestName), payload, dict, (K)0);
     if(-128 == result->t)
