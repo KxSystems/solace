@@ -184,7 +184,7 @@ Used for sending direct messages that require a sync reply.  Returns a byte list
 ### Topic Subscriptions
 
 ```
-.solace.callbackTopic[cb]
+.solace.setTopicMsgCallback[cb]
 ```
 
 Registers a q function that should be called on receipt of messages from topic subscriptions. If the dict contains a value of true for the key 'isRequest', the function should return with the response message contents (type byte list) as this is an indication that the sender is requesting a reply.
@@ -239,7 +239,7 @@ Used for sending guaranteed messages that require a sync reply.  Returns a byte 
 ### Flow Binding
 
 ```
-.solace.callbackQueue[callbackFunction]
+.solace.setQueueMsgCallback[callbackFunction]
 ```
 
 The callbackFuction should be a q function that will be called when any message is send to that endpoint. The callbackFunction signature takes a three parameters, 

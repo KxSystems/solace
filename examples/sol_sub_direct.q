@@ -21,7 +21,7 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 
 / receiving a direct msg 
 subUpdate:{[x;y;z] 0N!("RECEIVED MSG: #### Destination ";x;" Payload ";`char$y;" Dict ";z)};
-.solace.callbackTopic[`subUpdate]
+.solace.setTopicMsgCallback[`subUpdate]
 .solace.subscribeTopic[`$first params`topic;1b]
 
 / dont disconnect or quit, in order to receive any messages

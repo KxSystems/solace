@@ -24,7 +24,7 @@ subUpdate:{[x;y;z] 0N!("RECEIVED MSG: ####";z;" destination ";x;" payload: ";{`c
 
 bindopts:(`FLOW_BIND_BLOCKING;`FLOW_BIND_ENTITY_ID;`FLOW_ACKMODE;`FLOW_BIND_NAME)!(`1;`2;`2;`$first params`destname)
 
-.solace.callbackQueue[`subUpdate]
+.solace.setQueueMsgCallback[`subUpdate]
 .solace.bindQueue[bindopts]
 
 / dont disconnect or quit, in order to receive any messages

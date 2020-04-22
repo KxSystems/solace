@@ -21,7 +21,7 @@ flowUpdate:{[eventType;responseCode;eventInfo;destType;destName]r:enlist each (`
 
 / receiving and reply to a direct msg (reply only if incoming msg has isRequest set to true)
 subUpdate:{[x;y;z] 0N!("RECEIVED MSG: #### Destination ";x;" Payload ";`char$y;" Dict ";z);$[z`isRequest;`byte$"reply contents";0i]};
-.solace.callbackTopic[`subUpdate] 
+.solace.setTopicMsgCallback[`subUpdate] 
 
 .solace.subscribeTopic[`$first params`topic;1b]
 
