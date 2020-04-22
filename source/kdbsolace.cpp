@@ -117,25 +117,6 @@ static void watchSocket()
         printf("[%ld] Solace problem create fd monitor\n", THREAD_ID);
 }
 
-K createBatch()
-{
-    K vals = knk(0);
-    jk(&(vals), ktn(KI,0)); //[0] replytype
-    jk(&(vals), knk(0));    //[1] replyname
-    jk(&(vals), knk(0));    //[2] correlation id
-    jk(&(vals), ktn(KJ,0)); //[3] message id (used for acks)
-    return vals;
-}
-
-int addMsgToBatch(K* batch, int replyType, const char* replyName, const char* correlationId, solClient_msgId_t msgId)
-{
-    ja(&(((K*)(*batch)->G0)[0]), &replyType);
-    jk(&(((K*)(*batch)->G0)[1]), kp((char*)replyName));
-    jk(&(((K*)(*batch)->G0)[2]), kp((char*)correlationId));
-    ja(&(((K*)(*batch)->G0)[3]), &msgId);   // message id (used for acks)
-    return (((K*)(*batch)->G0)[0])->n;
-}
-
 void setReplyTo(K replyType, K replydest, solClient_opaqueMsg_pt msg_p)
 {
     if ((replydest != NULL) && (replydest->t == -KS) && (replyType->t == -KI) && (strlen(replydest->s) > 0))
@@ -286,16 +267,15 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     }
     K payload = ktn(KG, dataSize);
     memcpy(payload->G0, dataPtr, dataSize);
-
-    K vals = createBatch();
-    addMsgToBatch(&(vals), replyto.destType, replyToName, correlationid, msgId);
-
+    
     K keys = ktn(KS,4);
     kS(keys)[0]=ss((char*)"replyType");
     kS(keys)[1]=ss((char*)"replyName");
     kS(keys)[2]=ss((char*)"correlationId");
     kS(keys)[3]=ss((char*)"msgId");
-    K dict = xD(keys, vals);
+    K vals = knk(4,ki(replyto.destType),kp((char*)replyToName),kp((char*)correlationid),kj(msgId));
+    K dict = xD(keys,vals);
+    
     K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), ks((char*)flowDestName), payload, dict, (K)0);
     if(-128 == result->t)
         printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, KDB_QUEUE_MSG_CALLBACK_FUNC.c_str());
