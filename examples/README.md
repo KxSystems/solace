@@ -153,9 +153,9 @@ Params:
 - -user - username
 - -pass - password
 - -data - message payload to send
-- -desttype - (optional) type of the destination (can be 'queue' or 'topic'), defaults to queue
-- -destname - (optional) name of the endpoint to be created
-- -correlationid - (optional) correlation id
+- -dtype - (optional) type of the destination (can be 'queue' or 'topic'), defaults to queue
+- -dest - (optional) name of the endpoint to be created
+- -corr - (optional) correlation id
 
 #### sol_sub_persist.q
 
@@ -173,4 +173,4 @@ Params:
 - -vpn - VPN name
 - -user - username
 - -pass - password
-- -destname - (optional) name of the endpoint queue to be used
+- -dest - (optional) name of the endpoint queue to be used
