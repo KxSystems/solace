@@ -20,6 +20,7 @@ bindQueue:`libkdbsolace 2:(`bindqueue_solace;1)
 unBindQueue:`libkdbsolace 2:(`unbindqueue_solace;1)
 sendAck:`libkdbsolace 2:(`sendack_solace;2)
 endpointTopicSubscribe:`libkdbsolace 2:(`endpointtopicsubscribe_solace;3)
+endpointTopicUnsubscribe:`libkdbsolace 2:(`endpointtopicunsubscribe_solace;3)
 destroy:`libkdbsolace 2:(`destroy_solace;1)
 
 \d .
