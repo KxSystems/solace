@@ -7,7 +7,7 @@ This API permits the use of interacting with Solace PubSub+ broker with KDB+. It
 
 ## New to KDB+ ?
 
-Kdb+ is the world's fastest time-series database, optimized for ingesting, analyzing and storing massive amounts of structured data. To access the free editions of kdb+, please visit https://code.kx.com/q/learn/ for downloads and developer information. For general information, visit https://kx.com/
+Kdb+ is the world's fastest time-series database, optimized for ingesting, analyzing and storing massive amounts of structured data. To get started with kdb+, please visit https://code.kx.com/q/learn/ for downloads and developer information. For general information, visit https://kx.com/
 
 ## New to Solace PubSub+ ?
 
