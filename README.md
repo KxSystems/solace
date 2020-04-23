@@ -85,7 +85,7 @@ See contents of the [examples](examples/) folder and its associated [README.md](
       * [.solace.createEndpoint](#solacecreateendpoint)
       * [.solace.destroyEndpoint](#solacedestroyendpoint)
       * [.solace.endpointTopicSubscribe](#solaceendpointtopicsubscribe)
-      * [.solace.endpointtopicunsubscribe](#solaceendpointtopicunsubscribe)
+      * [.solace.endpointTopicUnsubscribe](#solaceendpointTopicUnsubscribe)
   - [Direct Messaging](#direct-messaging)
       * [.solace.sendDirect](#solacesenddirect)
       * [.solace.sendDirectRequest](#solacesenddirectrequest)
@@ -205,10 +205,10 @@ Destroys endpoints. Reference `createEndpoint`.
 
 Add a topic subscription to an existing endpoint. Can be added to queues or remote clients.
 
-#### .solace.endpointtopicunsubscribe
+#### .solace.endpointTopicUnsubscribe
 
 ```
-.solace.endpointtopicunsubscribe[options;provFlags;topic]
+.solace.endpointTopicUnsubscribe[options;provFlags;topic]
 ```
 
 Removes a topic subscription from an existing endpoint. Can be used with queues or remote clients.
