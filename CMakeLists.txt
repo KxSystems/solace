@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
+project(solacekdb CXX)
+
+set (CMAKE_BUILD_TYPE Release)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DKXVER=3")
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DKXVER=3")
-
-project(solacekdb)
-set(CMAKE_BUILD_TYPE Release)
 
 set(MY_LIBRARY_NAME kdbsolace)
 file(GLOB CPP_FILES source/*.cpp)
