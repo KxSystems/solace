@@ -279,7 +279,7 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     
     K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), ks((char*)flowDestName), payload, dict, (K)0);
     if(-128 == result->t)
-        printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, KDB_QUEUE_MSG_CALLBACK_FUNC.c_str());
+        printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(),flowDestName);
 
     solClient_msg_free(&msg);
 }
@@ -626,7 +626,7 @@ K getcapability_solace(K capabilityName)
     char capStr[getStringSize(capabilityName)];
     setString(capStr,capabilityName,sizeof(capStr));
 
-    solClient_returnCode_t returnCode = solClient_session_getCapability (session_p, capStr, &field, sizeof(field));
+    solClient_session_getCapability (session_p, capStr, &field, sizeof(field));
 
     switch (field.type)
     {
