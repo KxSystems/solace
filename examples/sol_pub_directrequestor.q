@@ -1,4 +1,4 @@
-\l examples/sol_init.q
+\l sol_init.q
 
 // sending a direct message to topic requiring a reply
 reply:.solace.sendDirectRequest[params`topic;params`data;5000i;"";""]

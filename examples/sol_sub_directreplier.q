@@ -1,6 +1,6 @@
 -1"### Enter '\\\\' to exit\n";
 
-\l examples/sol_init.q
+\l sol_init.q
 
 -1"### Registering topic message callback";
 subUpdate:{[dest;payload;dict]

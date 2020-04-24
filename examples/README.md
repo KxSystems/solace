@@ -7,9 +7,21 @@ Add C solace client library to your LD_LIBRARY_PATH environment variable.
 Place the libkdbsolace.so (from your release) into the same directory as your 'q' executable.
 Place solace.q into your KDB+ installation directory.
 
+The examples are designed to be run within the examples directory.
+
 ## Running Examples
 
 ### Utilities
+
+#### sol_version.q
+
+Prints the Solace API version currently in use.
+
+Example:
+
+```
+q sol_version.q
+```
 
 #### sol_capabilities.q
 
