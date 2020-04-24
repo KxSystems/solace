@@ -25,6 +25,9 @@ target_link_libraries(${MY_LIBRARY_NAME} solclient)
 set_target_properties(${MY_LIBRARY_NAME} PROPERTIES
     PUBLIC_HEADER source/kdbsolace.h)
 
+IF(APPLE)
+   set_target_properties(${MY_LIBRARY_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+ENDIF()
 
 install(TARGETS ${MY_LIBRARY_NAME}
     LIBRARY DESTINATION ${PROJECT_BINARY_DIR}/api/lib
