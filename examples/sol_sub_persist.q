@@ -1,6 +1,6 @@
 -1"### Enter '\\\\' to exit\n";
 
-\l examples/sol_init.q
+\l sol_init.q
 
 -1"### Registering queue message callback";
 subUpdate:{[dest;payload;dict]
@@ -8,6 +8,6 @@ subUpdate:{[dest;payload;dict]
  show(`payload`dest!("c"$payload;dest)),dict;
  .solace.sendAck[dest;dict`msgId];
  }
-.solace.setTopicMsgCallback`subUpdate;
+.solace.setQueueMsgCallback`subUpdate;
 
 .solace.bindQueue`FLOW_BIND_BLOCKING`FLOW_BIND_ENTITY_ID`FLOW_ACKMODE`FLOW_BIND_NAME!`1`2`2,params`dest;

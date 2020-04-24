@@ -202,8 +202,8 @@ void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
         solClient_opaqueMsg_pt replyMsg = NULL;
         solClient_msg_alloc (&replyMsg);
         solClient_msg_setBinaryAttachment ( replyMsg, getData(replyK), getDataSize(replyK));
-        if (solClient_session_sendReply(session_p,msg,replyMsg) != SOLCLIENT_OK)
-            solClient_msg_free(&replyMsg);
+        solClient_session_sendReply(session_p,msg,replyMsg);
+        solClient_msg_free(&replyMsg);
     }
     solClient_msg_free(&msg);
 }
