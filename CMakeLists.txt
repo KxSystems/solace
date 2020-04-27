@@ -8,19 +8,23 @@ set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-strict-aliasing -DKXVER=3")
 set(MY_LIBRARY_NAME kdbsolace)
 file(GLOB CPP_FILES source/*.cpp)
 set_source_files_properties(${CPP_FILES} PROPERTIES LANGUAGE CXX)
-message(STATUS "Using $ENV{SOLACE_API_DIR} for Solace API")
+
+message(STATUS "Generator : ${CMAKE_GENERATOR}")
+message(STATUS "Build Tool : ${CMAKE_BUILD_TOOL}")
+message(STATUS "Solace API : $ENV{SOLACE_API_DIR}")
 
 include_directories (
     $ENV{SOLACE_API_DIR}/include
 )
 
-link_directories(
-    $ENV{SOLACE_API_DIR}/lib/
+find_library(SOLCLIENT_LIBRARY
+    NAMES solclient libsolclient
+    HINTS "$ENV{SOLACE_API_DIR}/lib/" "$ENV{SOLACE_API_DIR}/lib/Win64"
 )
 
 add_library (${MY_LIBRARY_NAME} SHARED ${CPP_FILES})
 
-target_link_libraries(${MY_LIBRARY_NAME} solclient)
+target_link_libraries(${MY_LIBRARY_NAME} ${SOLCLIENT_LIBRARY})
 
 set_target_properties(${MY_LIBRARY_NAME} PROPERTIES
     PUBLIC_HEADER source/kdbsolace.h)
@@ -34,6 +38,5 @@ install(TARGETS ${MY_LIBRARY_NAME}
     PUBLIC_HEADER DESTINATION ${PROJECT_BINARY_DIR}/api/include)
 
 install(FILES README.md DESTINATION ${PROJECT_BINARY_DIR}/api/)
-
 install(DIRECTORY examples DESTINATION ${PROJECT_BINARY_DIR}/api)
 install(DIRECTORY script DESTINATION ${PROJECT_BINARY_DIR}/api)
