@@ -23,20 +23,13 @@ find_library(SOLCLIENT_LIBRARY
 )
 
 add_library (${MY_LIBRARY_NAME} SHARED ${CPP_FILES})
-
 target_link_libraries(${MY_LIBRARY_NAME} ${SOLCLIENT_LIBRARY})
-
-set_target_properties(${MY_LIBRARY_NAME} PROPERTIES
-    PUBLIC_HEADER source/kdbsolace.h)
 
 IF(APPLE)
    set_target_properties(${MY_LIBRARY_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
 ENDIF()
 
-install(TARGETS ${MY_LIBRARY_NAME}
-    LIBRARY DESTINATION ${PROJECT_BINARY_DIR}/api/lib
-    PUBLIC_HEADER DESTINATION ${PROJECT_BINARY_DIR}/api/include)
-
+install(TARGETS ${MY_LIBRARY_NAME} LIBRARY DESTINATION ${PROJECT_BINARY_DIR}/api/lib)
 install(FILES README.md DESTINATION ${PROJECT_BINARY_DIR}/api/)
 install(DIRECTORY examples DESTINATION ${PROJECT_BINARY_DIR}/api)
 install(DIRECTORY script DESTINATION ${PROJECT_BINARY_DIR}/api)
