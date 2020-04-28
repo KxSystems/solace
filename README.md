@@ -292,13 +292,13 @@ The parameters are:
 ```
 .solace.sendPersistentRequest[destType;dest;data;timeout;replyType;replydest]
 ```
-This function can be used for sending guaranteed messages that requie a synchronous reply. It returns a byte list of message received, containing the payload. Otherwise, an int will be returned to indicate the return code. If the value is 7, the reply wasn't received.
+This function can be used for sending guaranteed messages that require a synchronous reply. It returns a byte list of message received, containing the payload. Otherwise, an int will be returned to indicate the return code. If the value is 7, the reply wasn't received.
 
 The parameters are:
 - `destType`: Int type, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue.
 - `dest`: Destination name of the queue/topic. Symbol type.
 - `data`: byte array/string/symbol data array, which forms the basis of the payload for the message
-- `timeout`: Integer timeout param that indicate the millisecons to block/wait (must be greater than zero).
+- `timeout`: Integer timeout param that indicate the milliseconsd to block/wait (must be greater than zero).
 - `replyType`: Integer type. -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue. The topic/queue that you wish a reply to this message to go to
 - `replyDest`: Symbol type. The topic/queue that you wish a reply to this message to go to (empty for default session topic)
 
@@ -315,7 +315,7 @@ The `callbackFunction` takes three parameters:
 - second is byte array for the payload
 - third is a dictionary with keys:
   - `destType`: Int type. Message destination type, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue.
-  - `destName`: String type. Message destination name (can be differen from flow dest, e.g. when message was sent to a topic but mapped to a queue from where it was received)
+  - `destName`: String type. Message destination name (can be different from flow dest, e.g. when message was sent to a topic but mapped to a queue from where it was received)
   - `replyType`: Int type. Reply destination type, -1 for null, 0 for topic, 1 for queue, 2 for temp topic, 3 for tmp queue.
   - `replyName`: String type. Reply destination name
   - `correlationId`: String type. Original messages correlationId
@@ -379,7 +379,7 @@ This basic example return a HTTP 200 response on receipt of a message & prints o
 ```
 .z.pp:{[x] 0N!((first where x[0]=" ")+1)_x[0];r:.h.hn["200 OK";`txt;""];r}
 ```
-It is possible to configure multiple REST endpoints in KDB+, with data tranformations & callbacks.
+It is possible to configure multiple REST endpoints in KDB+, with data transformations & callbacks.
 
 ## References
 
