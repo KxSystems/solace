@@ -24,7 +24,6 @@ find_library(SOLCLIENT_LIBRARY
 
 if (CMAKE_GENERATOR MATCHES "Visual Studio")
     set(LINK_LIBS "${CMAKE_BINARY_DIR}/q.lib")
-    set (SRC_FILES ${SRC_FILES} "${CMAKE_SOURCE_DIR}/win32/kdbsolace.def")
 else()
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-strict-aliasing")
