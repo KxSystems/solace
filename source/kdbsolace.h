@@ -3,6 +3,12 @@
 
 #include "k.h"
 
+#ifdef _WIN32
+#define EXP __declspec(dllexport)
+#else
+#define EXP
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,12 +25,12 @@ extern "C" {
  * solace.init_solace[soloptions];
  *
  */
-K init_solace(K options);
+EXP K init_solace(K options);
 
 /**
  * Provides a dictionary of solace API version details. 
  */
-K version_solace(K unused);
+EXP K version_solace(K unused);
 
 /**
  * Should be called prior to init_solace. Provides notifications on session events
@@ -33,7 +39,7 @@ K version_solace(K unused);
  *  e.g. 0 is SOLCLIENT_SESSION_EVENT_UP_NOTICE ), 
  *  responsecode is an int (returned for some events, otherwise zero) and eventinfo is a string (further information about the event, when available)
  */
-K setsessioncallback_solace(K callbackFunction);
+EXP K setsessioncallback_solace(K callbackFunction);
 
 /**
  * Should be called prior to init_solace. Provides notifications on flow events (e.g. subscription made)
@@ -46,7 +52,7 @@ K setsessioncallback_solace(K callbackFunction);
  * e.g. 0 is SOLCLIENT_NULL_DESTINATION 
  * destName is a string (name of topic/queue)
  */
-K setflowcallback_solace(K callbackFunction);
+EXP K setflowcallback_solace(K callbackFunction);
 
 /**
  * Finds whether boolean type capabilities for the solace connection are supported 
@@ -56,14 +62,14 @@ K setflowcallback_solace(K callbackFunction);
  * @param capabilityName Can be a symbol of character array. Any capability name on http://docs.solace.com/API-Developer-Online-Ref-Documentation/c/index.html 
  * that returns a boolean e.g. "SESSION_CAPABILITY_PUB_GUARANTEED"
  */
-K iscapable_solace(K capabilityName);
+EXP K iscapable_solace(K capabilityName);
 
 /**
  * Provides the value of a capability from the Solace Router. The returned type may be symbol, int, bool, etc, depending on the type of
  * capability requested e.g. requesting SESSION_PEER_SOFTWARE_VERSION will return a symbol
  * @param capabilityName Can be a symbol of character array. Any capability name on http://docs.solace.com/API-Developer-Online-Ref-Documentation/c/index.html
  */
-K getcapability_solace(K capabilityName);
+EXP K getcapability_solace(K capabilityName);
 
 /**
  *  Creates a durable endpoint on the solace router. Returns 0 if queue created. Otherwise returns solace error code. Typical examples are
@@ -73,7 +79,7 @@ K getcapability_solace(K capabilityName);
  *  @param options Dictionary of properties (symbol types) for solClient_session_endpointProvision
  *  @param provFlags Integer defining provision flags for the endpoint as defined in solClient_session_endpointProvision
  */
-K createendpoint_solace(K options,K provFlags);
+EXP K createendpoint_solace(K options,K provFlags);
 
 /**
  * The opposite of createendpoint_solace. This destroys a durable endpint. Care must be taken, if items are still on the endpoint to be processed.
@@ -85,7 +91,7 @@ K createendpoint_solace(K options,K provFlags);
  * @param options Dictionary of properties (symbol types) for solClient_session_endpointDeprovision
  * @param provFlags Integer defining provision flags for the endpoint as defined in solClient_session_endpointDeprovision
  */
-K destroyendpoint_solace(K options, K provFlags);
+EXP K destroyendpoint_solace(K options, K provFlags);
 
 /**
  * Add a Topic subscription to an existing endpoint. Can be added to queues or remote clients. 
@@ -94,12 +100,12 @@ K destroyendpoint_solace(K options, K provFlags);
  * @param provFlags Integer defining provision flags for the endpoint as defined in solClient_session_endpointTopicSubscribe
  * @param topic Symbol or string that defines the topic in which to add a subscription
  */
-K endpointtopicsubscribe_solace(K options, K provFlags, K topic);
+EXP K endpointtopicsubscribe_solace(K options, K provFlags, K topic);
 
 /**
  * The opposite of endpointtopicsubscribe_solace. Refer to endpointtopicsubscribe_solace for params
  */
-K endpointtopicunsubscribe_solace(K options, K provFlags, K topic);
+EXP K endpointtopicunsubscribe_solace(K options, K provFlags, K topic);
 
 /**
  * Send data over Solace, using direct messages
@@ -107,7 +113,7 @@ K endpointtopicunsubscribe_solace(K options, K provFlags, K topic);
  * @param topic Should be a string. The Topic to send data to.
  * @param data Can be a symbol or string or byte array. The payload of the message.
  */
-K senddirect_solace(K topic, K data);
+EXP K senddirect_solace(K topic, K data);
 
 /**
  * Sends a topic request message. This expects an end-to-end reply from the client that receives the message
@@ -120,7 +126,7 @@ K senddirect_solace(K topic, K data);
  * @return Returns a byte list of message received, containing the payload. Otherwise will be an int
  * to indicate the return code. If value 7, the reply wasnt received. 
  */
- K senddirectrequest_solace(K topic, K data, K timeout, K replyType, K replydest);
+ EXP K senddirectrequest_solace(K topic, K data, K timeout, K replyType, K replydest);
 
 /**
  * Sets the KDB+ function that should be called on receipt of each direct msg created via
@@ -131,7 +137,7 @@ K senddirect_solace(K topic, K data);
  * @param cb Can be a symbol or string, which is the name of the q function to call on receipt of
  * each direct message
  */
-K callbacktopic_solace(K cb);
+EXP K callbacktopic_solace(K cb);
 
 /**
  * Subscribe to a topic 
@@ -139,14 +145,14 @@ K callbacktopic_solace(K cb);
  * @param topic Should be a string. The Topic to subscribe to
  * @param bool True to block until confirm or true to get session event callback on sub activation
  */
-K subscribetopic_solace(K topic, K isBlocking);
+EXP K subscribetopic_solace(K topic, K isBlocking);
 
 /**
  * Unsubscribe from a topic subscription 
  *
  * @param topic Should be a string. The Topic to unsubscribe from
  */
-K unsubscribetopic_solace(K topic);
+EXP K unsubscribetopic_solace(K topic);
 
 /**
  * Send data over Solace, using persistent/guaranteed messages 
@@ -156,7 +162,7 @@ K unsubscribetopic_solace(K topic);
  * @param data Can be a symbol of character array. The payload of the message.
  * @param correlationId Can be a symbol of character array. The Solace Correlation ID
  */
-K sendpersistent_solace(K destType, K dest, K data, K correlationId);
+EXP K sendpersistent_solace(K destType, K dest, K data, K correlationId);
 
 /**
  * Sends a guaranteed request message. This expects an end-to-end reply from the client that receives the message
@@ -171,7 +177,7 @@ K sendpersistent_solace(K destType, K dest, K data, K correlationId);
  * to indicate the return code. If value 7, the reply wasnt received. 
  * 
  */
-K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyType, K replydest);
+EXP K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyType, K replydest);
 
 
 /**
@@ -184,14 +190,14 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
  * Reply Destination Type is an int (-1 for null,0 for topic,1 for queue,2 for tmp topic,3 for tmp queue), reply destination name is a string,
  * correlationid is a string. msgid is a long
  */
-K callbackqueue_solace(K cb);
+EXP K callbackqueue_solace(K cb);
 
 /**
  * Subscribes/Binds to an endpoint (e.g. queue). The callback function provided will be called by the API whenever a message is received on the subscription
  *
  * @param bindProps TODO reference for properties. A dictionary of flow configuration properties with values.
  */
-K bindqueue_solace(K bindProps);
+EXP K bindqueue_solace(K bindProps);
 
 /**
  * Sends an acknowledgment on the specified Flow.
@@ -199,19 +205,19 @@ K bindqueue_solace(K bindProps);
  * @param msgid The msg id of the mesage to be acknowledged. Type long.
  * @return A integer with value 0 if ok, -1 for failure
  */
-K sendack_solace(K endpointname, K msgid);
+EXP K sendack_solace(K endpointname, K msgid);
 
 /**
  * Unsubscribes from a queue 
  *
  * @param endpointname The endpoint name
  */
-K unbindqueue_solace(K endpointname);
+EXP K unbindqueue_solace(K endpointname);
 
 /**
  * Should be called after init_solace, when nothing else needs to be sent
  */
-K destroy_solace(K a);
+EXP K destroy_solace(K a);
 
 #ifdef __cplusplus
 }

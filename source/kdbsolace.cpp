@@ -1,5 +1,7 @@
 #ifdef _WIN32
 #include <winsock2.h>
+#else
+#include <unistd.h>
 #endif
 #include "solclient/solClient.h"
 #include "solclient/solClientMsg.h"
