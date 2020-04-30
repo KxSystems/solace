@@ -52,13 +52,34 @@ If you don't already have an event broker running, you can avail of a free stand
 ### KDB+ Solace Integration
 
 #### Installation
+
+##### Linux
+
 Here are the steps for installation:
 
  1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
  2. Unzip the Solace API to a directory on the machine which the end user can read from.
  3. Add the lib directory to the `LD_LIBRARY_PATH` environment variable e.g. if unzipped to `/usr/local/solaceapi/`
 	 - `export LD_LIBRARY_PATH /usr/local/solaceapi/lib/:$LD_LIBRARY_PATH`
- 4.  Copy `libkdbsolace.so` which was built earlier (see earlier section: *Building Interface from Source*) to your KDB+ folder. If on a Linux 64bit machine with KDB+ installed in `/usr/local/q`, place the shared library into `/usr/local/q/l64/`.
+ 4.  Copy `kdbsolace.so` which was built or downloaded earlier to your KDB+ folder. If on a Linux 64bit machine with KDB+ installed in `/usr/local/q`, place the shared library into `/usr/local/q/l64/`.
+
+The q script to load the solace API (`solace.q`) can be placed in the current working directory or within the KDB+ install directory.
+
+See examples and API documentation on how to tailor the interface for your needs.
+
+##### Windows
+
+TODO
+
+##### Mac 
+
+Here are the steps for installation:
+
+  1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
+  2. Unzip the Solace API to a directory on the machine which the end user can read from.
+  3. Add the lib directory to the `DYLD_LIBRARY_PATH` environment variable e.g. if unzipped to `/Users/jim/solaceapi/`
+     - `export DYLD_LIBRARY_PATH /Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH`
+  4. Copy `kdbsolace.so` which was built or downloaded earlier. Place the shared library into `/usr/local/q/m64/`.
 
 The q script to load the solace API (`solace.q`) can be placed in the current working directory or within the KDB+ install directory.
 

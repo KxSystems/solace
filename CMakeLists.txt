@@ -32,6 +32,11 @@ endif()
     
 add_library (${MY_LIBRARY_NAME} SHARED ${SRC_FILES})
 
+IF(APPLE)
+   set_target_properties(${MY_LIBRARY_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+   set_target_properties(${MY_LIBRARY_NAME} PROPERTIES SUFFIX .so)
+endif()
+
 target_link_libraries(${MY_LIBRARY_NAME} ${SOLCLIENT_LIBRARY} ${LINK_LIBS})
 set_target_properties(${MY_LIBRARY_NAME} PROPERTIES PREFIX "")
 
