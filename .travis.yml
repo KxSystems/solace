@@ -38,7 +38,7 @@ jobs:
         - mkdir solace && wget -q https://products.solace.com/download/C_API_OSX && tar xvf C_API_OSX -C ./solace --strip-components=1;
         - export SOLACE_API_DIR=$TRAVIS_BUILD_DIR/solace/
       install:
-        - mkdir build && cd build && cmake ..
+        - cd build && cmake ..
       script:
         - make install VERBOSE=1
       before_deploy:
