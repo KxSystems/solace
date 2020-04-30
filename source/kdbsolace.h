@@ -2,7 +2,6 @@
 #define DELTASOLACE_H_
 
 #include "k.h"
-#include "solclient/solClient.h"
 
 #ifdef __cplusplus
 extern "C" {

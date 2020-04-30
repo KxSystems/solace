@@ -1,43 +1,57 @@
+os: linux
 language: cpp
+compiler: gcc
 
-compiler:
-    - gcc
-
-os:
-    - linux
-    - osx
-
-env:
-    global:
-        # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-        #   via the "travis encrypt" command using the project repo's public key
-        - secure: "kMFOfhU/uxZ2ogrw6nTPxRC1hpQ/xMw1jcIiXqGE1JMOp1MUw+/TdJooHg6HQqxj2gsdUXzNJKBoEIDiS2iuK4VvofN/Bo0/NBhVQ1Mj6irhu4vurSgx5OVlp9/IwtLz35Obip+VXEDfMbXVG1+4ERDM6PqYQSUFNKxlSKB6lLryeSS1dFz2O2nYOpjtLBNVLUub9cRlWkLjb/dSPdVvlPxGHRPleHJNjcs5s0I2jRn/bZRV4cEsbnjPeIADCchZjzYDDvefCCm7J/eoQJBRXHeHb2BpdyIHhZKsq4TvVGU7gAi5TqyONtYRTvaV3FWW7GOlEvwNA5kPRVFm3kVM/uWQiNtOCA+EMQZUjKz4AUkyDRy8Tg41JFfgk/CV3LjMJKg98p/gqQTU3kYh6o7kv4fXpWvKto60fAyIIfvHJZx9EOCpSdyg4FT7Qzqu0l5It3ocrWNuAGSKoj9j2lsNv2zuHp27eAu8HvbpWnIVl2pbi39pNDnUvYHS3oYn6hrXT741tPUYg+qFbu5SZ+k/rerSEUfZ8MuQ0EsrjS7HfZHqoBDakt+Wbhvc2v92sulF8ABDVX4REJoJT4LvEM0AnVrOQC4Beinb5ZzSnFfjW2qEUhAry3RnQc7CuHrOX0qKa+3dogKq1IRY2OGUc9DccwLefIelhN2Gj3FuEVsG0kY="
-        - SOLACE_API_DIR=$TRAVIS_BUILD_DIR/solace/
+stage:
+  - build Release
     
-before_install:
-    - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
-    - if [ $TRAVIS_OS_NAME = linux ]; then mkdir solace && wget https://products.solace.com/download/C_API_LINUX64 && tar xvf C_API_LINUX64 -C ./solace --strip-components=1; fi
-    - if [ $TRAVIS_OS_NAME = osx ]; then mkdir solace && wget https://products.solace.com/download/C_API_OSX && tar xvf C_API_OSX -C ./solace --strip-components=1; fi
-    - echo $SOLACE_API_DIR
-          
-addons:
-    coverity_scan:
-        project:
-            name: "KxSystems/solace"
-            description: "Solace Client for KDB+"
-        notification_email: sshanks@kx.com
-        build_command_prepend: "cov-configure --gcc"
-        build_command: "make VERBOSE=1"
-        branch_pattern: coverity_scan
+jobs:
+  include:
+    
+    # LINUX BUILD
+    - stage: build Release
+      name: "Linux Build Release"
+      os: linux
+      before_install:
+        - mkdir solace && wget -q https://products.solace.com/download/C_API_LINUX64 && tar xvf C_API_LINUX64 -C ./solace --strip-components=1;
+        - export SOLACE_API_DIR=$TRAVIS_BUILD_DIR/solace/
+      install:
+        - cd build && cmake ..
+      script:
+        - make install VERBOSE=1
+      before_deploy:
+        - tar -zcvf kdbsolace-${TRAVIS_OS_NAME}-${TRAVIS_TAG}.tar.gz kdbsolace
+      deploy:
+        provider: releases
+        api_key:
+          secure: M85g7GXAfsnpDRcvJISHcR3hw+ThqrTTBY8v/T37LdpBoZ7mq9PZmC1pl+MfvZlVwU2M44O4h7er0k0OrZv2kxKcfLd9PmS5Qx1xwe1mv6sU7/9EZyx5LSGgmiUWlrBrtijbROLsk0TwMEMYuX8s2Nq+xZtI8q9Bg09Smg4QQnzpwYsyWhVxdbumhYaEshJ4jIWHkpRTVR4hFcPqaINLvuUD2Je5IccV/lne1aQvqYoNhFNuvEV85LhcnwZeE9CmFA6vARry9nneOU/lRiISjhAR48ZCDqQSNZ36XT7u3aAWkAcRpjIu9P9cJ15E2A4ilV9/6hF8LVUPcY3KHEsury7VGI/h2z2gStr7c34ZScyRohxl+xY2O4TiElatXKLgJSCLvL38Wvl4QlbxV7J7l8wJRTBhln8oPIuU70vQcg5ayBVONhCFIIGsK9GeowUQJR6kXgWBtFEnVXz71FLbuP24KiaT3/fXGA40v0x9H1EeteqheC1su7rPkesOzmyG0Xl3YOsgoPBrmTXUytuwnH4nV+uWB8Sxl7fGqilonKvXaADJehOxMOupRl163Vmkhahd+bHjmhD4lNTe2yAxTJmB2Ce4DhxUszYbnlhRlrry4kzuno/MZ3VA30O4zE+JQS4XYDmls/8SVKGai+8Z55D/KOGt7wVoZj5Fm904Umw=
+        file: kdbsolace-${TRAVIS_OS_NAME}-${TRAVIS_TAG}.tar.gz
+        on:
+          tags: true
+        skip_cleanup: 'true'
 
-before_script:
-    - cmake .
-
-script:
-    - if [[ "${COVERITY_SCAN_BRANCH}" == 1 ]];
-      then
-        echo "Don't build on coverty_scan branch.";
-        exit 0;
-      fi
-
-    - make install VERBOSE=1
+    # WINDOWS (VISUAL STUDIO 2017) BUILD
+    - stage: build Release
+      name: "Windows MVS 2017 Build Release"
+      os: windows
+      before_install:
+        - mkdir solace && wget -q https://products.solace.com/download/C_API_WIN64 && tar xvf C_API_WIN64 -C ./solace --strip-components=1;
+        - export SOLACE_API_DIR=$TRAVIS_BUILD_DIR/solace/
+      install:
+        - cd build
+        - wget -q https://github.com/KxSystems/kdb/raw/master/w64/q.lib
+        - cmake -G "Visual Studio 15 2017 Win64" ..
+      script:
+        - export MSBUILD_PATH="/c/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin/"
+        - export PATH=$PATH:$MSBUILD_PATH
+        - MSBuild.exe INSTALL.vcxproj //m //nologo //verbosity:normal //p:Configuration=Release //p:Platform=x64
+      before_deploy:
+        - tar -zcvf kdbsolace-${TRAVIS_OS_NAME}-${TRAVIS_TAG}.tar.gz kdbsolace
+      deploy:
+        provider: releases
+        api_key:
+          secure: M85g7GXAfsnpDRcvJISHcR3hw+ThqrTTBY8v/T37LdpBoZ7mq9PZmC1pl+MfvZlVwU2M44O4h7er0k0OrZv2kxKcfLd9PmS5Qx1xwe1mv6sU7/9EZyx5LSGgmiUWlrBrtijbROLsk0TwMEMYuX8s2Nq+xZtI8q9Bg09Smg4QQnzpwYsyWhVxdbumhYaEshJ4jIWHkpRTVR4hFcPqaINLvuUD2Je5IccV/lne1aQvqYoNhFNuvEV85LhcnwZeE9CmFA6vARry9nneOU/lRiISjhAR48ZCDqQSNZ36XT7u3aAWkAcRpjIu9P9cJ15E2A4ilV9/6hF8LVUPcY3KHEsury7VGI/h2z2gStr7c34ZScyRohxl+xY2O4TiElatXKLgJSCLvL38Wvl4QlbxV7J7l8wJRTBhln8oPIuU70vQcg5ayBVONhCFIIGsK9GeowUQJR6kXgWBtFEnVXz71FLbuP24KiaT3/fXGA40v0x9H1EeteqheC1su7rPkesOzmyG0Xl3YOsgoPBrmTXUytuwnH4nV+uWB8Sxl7fGqilonKvXaADJehOxMOupRl163Vmkhahd+bHjmhD4lNTe2yAxTJmB2Ce4DhxUszYbnlhRlrry4kzuno/MZ3VA30O4zE+JQS4XYDmls/8SVKGai+8Z55D/KOGt7wVoZj5Fm904Umw=
+        file: kdbsolace-${TRAVIS_OS_NAME}-${TRAVIS_TAG}.tar.gz
+        on:
+          tags: true
+        skip_cleanup: 'true'
