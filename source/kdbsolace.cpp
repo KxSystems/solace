@@ -1,4 +1,6 @@
-#include "kdbsolace.h"
+#ifdef _WIN32
+#include <winsock2.h>
+#endif
 #include "solclient/solClient.h"
 #include "solclient/solClientMsg.h"
 #include "KdbSolaceEvent.h"
@@ -7,9 +9,9 @@
 #include <map>
 #include <queue>
 #include "log/ThreadID.h"
-#include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include "kdbsolace.h"
 
 /**
  * UTILITY FUNCTIONS/MACROS
