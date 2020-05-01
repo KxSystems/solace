@@ -513,12 +513,14 @@ K init_solace(K options)
 #ifdef WIN32
     u_long iMode = 1;
     if (ioctlsocket(SPAIR[0], FIONBIO, &iMode) != NO_ERROR)
-        printf("ioctlsocket failed\n");
+        return krr((S)"Solace init couldn't set socket to non-blocking");
     if (ioctlsocket(SPAIR[1], FIONBIO, &iMode) != NO_ERROR)
-        printf("ioctlsocket failed\n");
+        return krr((S)"Solace init couldn't set socket to non-blocking");
 #else
-    fcntl(SPAIR[0], F_SETFL, O_NONBLOCK);
-    fcntl(SPAIR[1], F_SETFL, O_NONBLOCK);
+    if (fcntl(SPAIR[0], F_SETFL, O_NONBLOCK) == -1)
+        return krr((S)"Solace init couldn't set socket to non-blocking");
+    if (fcntl(SPAIR[1], F_SETFL, O_NONBLOCK) == -1)
+        return krr((S)"Solace init couldn't set socket to non-blocking");
 #endif
     sd1(SPAIR[0],kdbCallback);
 
