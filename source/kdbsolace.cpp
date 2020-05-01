@@ -1,8 +1,9 @@
+
 #ifdef _WIN32
-#include <winsock2.h>
-#else
-#include <unistd.h>
+#pragma comment(lib,"ws2_32.lib")
+#pragma comment(lib,"q.lib")
 #endif
+#include "socketpair.c"
 #include "solclient/solClient.h"
 #include "solclient/solClientMsg.h"
 #include "KdbSolaceEvent.h"
@@ -34,22 +35,26 @@ void* getData(K d)
     return (d->t == -KS) ? d->s : (void*)d->G0;
 }
 
-int getStringSize(K str)
+char* createString(K in)
 {
-    if (str->t == KC)
-        return (str->n) + 1;
-    else if (str->t == -KS)
-        return strlen(str->s)+1;
-    return 1;
-}
-
-void setString(char* str,K in,int len)
-{
+    char* newStr = NULL;
+    int len = 1;
     if (in->t == KC)
-        memcpy(str,in->G0,len-1);
+    {
+        len = (in->n) + 1;
+        newStr = (char*)malloc(len);
+        memcpy(newStr,in->G0,len-1);
+    }
     else if (in->t == -KS)
-        memcpy(str,in->s,len-1);
-    str[len-1]= '\0';
+    {
+        len = strlen(in->s)+1;
+        newStr = (char*)malloc(len);
+        memcpy(newStr,in->s,len-1);
+    }
+    else
+        newStr = (char*)malloc(len);
+    newStr[len-1]='\0';
+    return newStr;
 }
 
 const char** createProperties(K options)
@@ -72,7 +77,11 @@ const char** createProperties(K options)
 static solClient_opaqueSession_pt session_p = NULL;
 static solClient_opaqueContext_pt context = NULL;
 
-static int CALLBACK_PIPE[2];
+#ifdef _WIN32
+static SOCKET SPAIR[2];
+#else
+static int SPAIR[2];
+#endif
 static std::string KDB_SESSION_EVENT_CALLBACK_FUNC;
 static std::string KDB_FLOW_EVENT_CALLBACK_FUNC;
 static std::string KDB_DIRECT_MSG_CALLBACK_FUNC;
@@ -94,7 +103,7 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
         KdbSolaceEvent msgAndSource;
         msgAndSource._type = DIRECT_MSG_EVENT;
         msgAndSource._event._directMsg=msg_p;
-        ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+        int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
         if (numWritten != sizeof(msgAndSource))
             return;
         BATCH_DIRECT_MSGS.pop();
@@ -106,7 +115,7 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
         msgAndSource._type = QUEUE_MSG_EVENT;
         msgAndSource._event._queueMsg._msg = event._msg;
         msgAndSource._event._queueMsg._flow = event._flow;
-        int numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+        int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
         if (numWritten != sizeof(msgAndSource))
             return;
         BATCH_QUEUE_MSGS.pop();
@@ -117,7 +126,7 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
 static void watchSocket()
 {
     solClient_returnCode_t rc;
-    if ((rc = solClient_context_registerForFdEvents(context,CALLBACK_PIPE[1],SOLCLIENT_FD_EVENT_WRITE,socketWrittableCbFunc,NULL)) != SOLCLIENT_OK)
+    if ((rc = solClient_context_registerForFdEvents(context,SPAIR[1],SOLCLIENT_FD_EVENT_WRITE,socketWrittableCbFunc,NULL)) != SOLCLIENT_OK)
         printf("[%ld] Solace problem create fd monitor\n", THREAD_ID);
 }
 
@@ -291,13 +300,13 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
 K kdbCallback(I d)
 {
     KdbSolaceEvent msgAndSource;
-    ssize_t copied = -1;
+    int copied = -1;
     // drain the queue of pending solace events/msgs
-    while( (copied = read(d,&msgAndSource,sizeof(msgAndSource))) != -1)
+    while( (copied = recv(d,(char*)&msgAndSource,sizeof(msgAndSource), 0)) != -1)
     {
-        if (copied < (ssize_t)sizeof(msgAndSource))
+        if (copied < (int)sizeof(msgAndSource))
         {
-            printf("[%ld] Solace problem reading data from pipe, got %ld bytes, expecting %ld\n", THREAD_ID, copied, sizeof(msgAndSource));
+            printf("[%ld] Solace problem reading data from pipe, got %d bytes, expecting %ld\n", THREAD_ID, copied, sizeof(msgAndSource));
             return (K)0;
         }
         switch(msgAndSource._type)
@@ -338,7 +347,7 @@ solClient_rxMsgCallback_returnCode_t defaultSubCallback ( solClient_opaqueSessio
     KdbSolaceEvent msgAndSource;
     msgAndSource._type = DIRECT_MSG_EVENT;
     msgAndSource._event._directMsg=msg_p;
-    ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+    int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
     if (numWritten != sizeof(msgAndSource))
     {
         BATCH_DIRECT_MSGS.push(msg_p);
@@ -360,7 +369,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
         BATCH_QUEUE_MSGS.push(msgAndSource._event._queueMsg);
         return SOLCLIENT_CALLBACK_TAKE_MSG;
     }
-    ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+    int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
     if (numWritten != sizeof(msgAndSource))
     {
         BATCH_QUEUE_MSGS.push(msgAndSource._event._queueMsg);
@@ -392,7 +401,7 @@ void flowEventCallback ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_flow_ev
         msgAndSource._event._flow->_eventInfo = eventInfo_p->info_p;
         msgAndSource._event._flow->_destType = destinationType;
         msgAndSource._event._flow->_destName = destinationName; 
-        ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+        int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
         if (numWritten != sizeof(msgAndSource))
             printf("[%ld] Solace flow problem writting to pipe\n", THREAD_ID);
     }
@@ -447,7 +456,7 @@ void eventCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_sessi
         msgAndSource._event._session->_eventType = eventInfo_p->sessionEvent;
         msgAndSource._event._session->_responseCode = eventInfo_p->responseCode;
         msgAndSource._event._session->_eventInfo = eventInfo_p->info_p;
-        ssize_t numWritten = write(CALLBACK_PIPE[1], &msgAndSource, sizeof(msgAndSource));
+        int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
         if (numWritten != sizeof(msgAndSource))
             printf("[%ld] Solace session problem writting to pipe\n", THREAD_ID);
     }
@@ -498,13 +507,21 @@ void eventCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_sessi
 K init_solace(K options)
 {
     CHECK_PARAM_DICT_SYMS(options,"init_solace");
-
-    int ret = pipe(CALLBACK_PIPE);
+printf("CREATED DUMB SOCKET\n");
+    int ret = dumb_socketpair(SPAIR,1);
     if (ret != 0)
         return krr((S)"Solace init couldn't create pipe");
-    fcntl(CALLBACK_PIPE[0], F_SETFL, O_NONBLOCK);
-    fcntl(CALLBACK_PIPE[1], F_SETFL, O_NONBLOCK);
-    sd1(CALLBACK_PIPE[0],kdbCallback);
+#ifdef WIN32
+    u_long iMode = 1;
+    if (ioctlsocket(SPAIR[0], FIONBIO, &iMode) != NO_ERROR)
+        printf("ioctlsocket failed\n");
+    if (ioctlsocket(SPAIR[1], FIONBIO, &iMode) != NO_ERROR)
+        printf("ioctlsocket failed\n");
+#else
+    fcntl(SPAIR[0], F_SETFL, O_NONBLOCK);
+    fcntl(SPAIR[1], F_SETFL, O_NONBLOCK);
+#endif
+    sd1(SPAIR[0],kdbCallback);
 
     solClient_opaqueContext_pt context_p;
     solClient_context_createFuncInfo_t contextFuncInfo = SOLCLIENT_CONTEXT_CREATEFUNC_INITIALIZER;
@@ -616,9 +633,10 @@ K iscapable_solace(K capabilityName)
 {
     CHECK_SESSION_CREATED;
     CHECK_PARAM_STRING_TYPE(capabilityName,"iscapable_solace");
-    char capStr[getStringSize(capabilityName)];
-    setString(capStr,capabilityName,sizeof(capStr));
-    return kb(solClient_session_isCapable(session_p,capStr));
+    char* capStr = createString(capabilityName);
+    bool isCap = solClient_session_isCapable(session_p,capStr);
+    free(capStr);
+    return kb(isCap);
 }
 
 K getcapability_solace(K capabilityName)
@@ -627,10 +645,9 @@ K getcapability_solace(K capabilityName)
     CHECK_PARAM_STRING_TYPE(capabilityName,"getcapability_solace");
     solClient_field_t field;
 
-    char capStr[getStringSize(capabilityName)];
-    setString(capStr,capabilityName,sizeof(capStr));
-
+    char* capStr = createString(capabilityName);
     solClient_session_getCapability (session_p, capStr, &field, sizeof(field));
+    free(capStr);
 
     switch (field.type)
     {
@@ -731,14 +748,14 @@ K endpointtopicsubscribe_solace(K options, K provFlags, K topic)
     if (!solClient_session_isCapable(session_p,SOLCLIENT_SESSION_CAPABILITY_ENDPOINT_MANAGEMENT))
         return krr((S)"Solace endpointtopicsubscribe - server does not support endpoint management");
 
-    char topicStr[getStringSize(topic)];
-    setString(topicStr,topic,sizeof(topicStr));
+    char* topicStr = createString(topic);
     const char** provProps = createProperties(options);
     solClient_returnCode_t retCode = solClient_session_endpointTopicSubscribe((char**)provProps,
                                             session_p,
                                             provFlags->i, 
                                             topicStr,
                                             NULL); // correlation tag
+    free(topicStr);
     free(provProps);
     if (retCode != SOLCLIENT_OK)
     {
@@ -758,14 +775,14 @@ K endpointtopicunsubscribe_solace(K options, K provFlags, K topic)
     if (!solClient_session_isCapable(session_p,SOLCLIENT_SESSION_CAPABILITY_ENDPOINT_MANAGEMENT))
         return krr((S)"Solace endpointtopicunsubscribe - server does not support endpoint management");
 
-    char topicStr[getStringSize(topic)];
-    setString(topicStr,topic,sizeof(topicStr));
+    char* topicStr = createString(topic);
     const char** provProps = createProperties(options);
     solClient_returnCode_t retCode = solClient_session_endpointTopicUnsubscribe((char**)provProps,
                                             session_p,
                                             provFlags->i, 
                                             topicStr,
                                             NULL); // correlation tag
+    free(topicStr);
     free(provProps);
     if (retCode != SOLCLIENT_OK)
     {
@@ -829,9 +846,9 @@ K senddirect_solace(K topic, K data)
 K callbacktopic_solace(K func)
 {
     CHECK_PARAM_STRING_TYPE(func,"callbacktopic_solace");
-    char cbStr[getStringSize(func)];
-    setString(cbStr,func,sizeof(cbStr));
+    char* cbStr = createString(func);
     KDB_DIRECT_MSG_CALLBACK_FUNC.assign(cbStr);
+    free(cbStr);
     return ki(SOLCLIENT_OK);
 }
 
@@ -879,9 +896,9 @@ K sendpersistent_solace(K destType, K dest, K data, K correlationId)
     solClient_opaqueMsg_pt msg_p = createPersistentMsg(destType,dest,data);
     if (correlationId != NULL)
     {
-        char correlationIdStr[getStringSize(correlationId)];
-        setString(correlationIdStr,correlationId,sizeof(correlationIdStr));
+        char* correlationIdStr = createString(correlationId);
         solClient_msg_setCorrelationId (msg_p, correlationIdStr);
+        free(correlationIdStr);
     }
     solClient_returnCode_t retCode = solClient_session_sendMsg ( session_p, msg_p ); 
     solClient_msg_free ( &msg_p );
@@ -924,9 +941,9 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
 K callbackqueue_solace(K func)
 {
     CHECK_PARAM_STRING_TYPE(func,"callbackqueue_solace");
-    char cbStr[getStringSize(func)];
-    setString(cbStr,func,sizeof(cbStr));
+    char* cbStr = createString(func);
     KDB_QUEUE_MSG_CALLBACK_FUNC.assign(cbStr);
+    free(cbStr);
     return ki(SOLCLIENT_OK);
 }
 
@@ -967,9 +984,9 @@ K sendack_solace(K endpointname, K msgid)
 {
     CHECK_PARAM_TYPE(msgid,-KJ,"sendack_solace");
     CHECK_PARAM_STRING_TYPE(endpointname,"sendack_solace");
-    char endpointStr[getStringSize(endpointname)];
-    setString(endpointStr,endpointname,sizeof(endpointStr));
+    char* endpointStr = createString(endpointname);
     std::map<std::string, solClient_opaqueFlow_pt>::iterator flowIt = QUEUE_SUB_INFO.find(endpointStr);
+    free(endpointStr);
     if (flowIt == QUEUE_SUB_INFO.end())
         return ki(SOLCLIENT_FAIL);
     solClient_opaqueFlow_pt solFlow = (solClient_opaqueFlow_pt)flowIt->second;
