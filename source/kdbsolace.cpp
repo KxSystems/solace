@@ -507,7 +507,6 @@ void eventCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_sessi
 K init_solace(K options)
 {
     CHECK_PARAM_DICT_SYMS(options,"init_solace");
-printf("CREATED DUMB SOCKET\n");
     int ret = dumb_socketpair(SPAIR,1);
     if (ret != 0)
         return krr((S)"Solace init couldn't create pipe");
