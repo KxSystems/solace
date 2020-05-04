@@ -302,7 +302,7 @@ K kdbCallback(I d)
     KdbSolaceEvent msgAndSource;
     int copied = -1;
     // drain the queue of pending solace events/msgs
-    while( (copied = recv(d,(char*)&msgAndSource,sizeof(msgAndSource), 0)) != -1)
+    while( (copied = recv(d,(char*)&msgAndSource,sizeof(msgAndSource), MSG_WAITALL)) != -1)
     {
         if (copied < (int)sizeof(msgAndSource))
         {
