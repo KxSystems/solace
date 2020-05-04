@@ -20,7 +20,9 @@ If you have any Solace related questions, you can raise them at [Solace Communit
 
 ## Building Interface From Source
 
-Building the interface from source requires `gcc`, `gcc c++`, `make` and `cmake` packages installed on your development machine.
+### Linux/Mac
+
+Building the interface from source requires `gcc`, `gcc c++`, `make` and `cmake` packages installed on your development machine (e.g. xcode for Mac).
 
 Follow these steps:
 
@@ -40,6 +42,18 @@ make install
 ```
 
 You should then find the resulting files in a newly created api dir, that should reside within the build directory.
+
+### Windows
+
+Building the interface from source requires Visual Studio
+
+Follow these steps for Visual Studio 15 (2017) and above:
+
+  1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
+  2. Set an environment variable `SOLACE_API_DIR` to the location of the unzipped Solace C API.
+  3. Run `cmake -G "Visual Studio 15 2017 Win64"` 
+
+This will generate a visual studio build package. 
 
 ## Running
 
@@ -69,7 +83,16 @@ See examples and API documentation on how to tailor the interface for your needs
 
 ##### Windows
 
-TODO
+Here are the steps for installation:
+
+    1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
+    2. Unzip the Solace API to a directory on the machine which the end user can read from.
+    3. Add the libsolclient.dll lib directory to the kdb lib (directory e.g. /usr/local/q/w64)
+    4. Copy `kdbsolace.so` which was built or downloaded earlier, to your KDB+ install binary dir e.g. if KDB+ installed at `/usr/local/q`, place the shared library into `/usr/local/q/w64/`.
+
+The q script to load the solace API (`solace.q`) can be placed in the current working directory or within the KDB+ install directory.
+
+See examples and API documentation on how to tailor the interface for your needs.
 
 ##### Mac 
 
@@ -79,7 +102,7 @@ Here are the steps for installation:
   2. Unzip the Solace API to a directory on the machine which the end user can read from.
   3. Add the lib directory to the `DYLD_LIBRARY_PATH` environment variable e.g. if unzipped to `/Users/jim/solaceapi/`
      - `export DYLD_LIBRARY_PATH /Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH`
-  4. Copy `kdbsolace.so` which was built or downloaded earlier. Place the shared library into `/usr/local/q/m64/`.
+  4. Copy `kdbsolace.so` which was built or downloaded earlier, to your KDB+ install binary dir e.g. if KDB+ installed at `/usr/local/q`, place the shared library into `/usr/local/q/m64/`..
 
 The q script to load the solace API (`solace.q`) can be placed in the current working directory or within the KDB+ install directory.
 
