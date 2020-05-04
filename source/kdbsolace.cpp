@@ -89,11 +89,13 @@ static std::string KDB_QUEUE_MSG_CALLBACK_FUNC;
 
 static std::map<std::string, solClient_opaqueFlow_pt> QUEUE_SUB_INFO;
 
-typedef std::queue<KdbSolaceEventQueueMsg> batchQueueMsgs;
-static batchQueueMsgs BLOCKED_QUEUE_MSGS;
-typedef std::queue<solClient_opaqueMsg_pt> batchDirectMsgs;
-static batchDirectMsgs BLOCKED_DIRECT_MSGS;
+
+static std::queue<KdbSolaceEventQueueMsg> BLOCKED_QUEUE_MSGS;
+static std::queue<solClient_opaqueMsg_pt> BLOCKED_DIRECT_MSGS;
+static std::queue<KdbSolaceEventSessionDetail*> BLOCKED_SESSION_EVENTS;
+static std::queue<KdbSolaceEventFlowDetail*> BLOCKED_FLOW_EVENTS;
 static std::string BLOCKED_PARTIAL_SEND_DATA;
+static bool CURRENTLY_BLOCKED = false;
 
 bool storePartialWrite(char* data, int dataSize, int numWritten)
 {
@@ -116,6 +118,21 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
                 BLOCKED_PARTIAL_SEND_DATA.assign(BLOCKED_PARTIAL_SEND_DATA.c_str()+numWritten,BLOCKED_PARTIAL_SEND_DATA.size()-numWritten);
             return;
         }
+    }
+    while (!BLOCKED_SESSION_EVENTS.empty())
+    {
+        KdbSolaceEventSessionDetail* event = BLOCKED_SESSION_EVENTS.front();
+        KdbSolaceEvent msgAndSource;
+        msgAndSource._type = SESSION_EVENT;
+        msgAndSource._event._session = event;
+        int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
+        if (numWritten != sizeof(msgAndSource))
+        {
+            if (storePartialWrite((char*)&msgAndSource,sizeof(msgAndSource),numWritten))
+                BLOCKED_SESSION_EVENTS.pop();
+            return;
+        }
+        BLOCKED_SESSION_EVENTS.pop();
     }
     while (!BLOCKED_DIRECT_MSGS.empty())
     {
@@ -148,11 +165,28 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
         }
         BLOCKED_QUEUE_MSGS.pop();
     }
+    while (!BLOCKED_FLOW_EVENTS.empty())
+    {
+        KdbSolaceEventFlowDetail* event = BLOCKED_FLOW_EVENTS.front();
+        KdbSolaceEvent msgAndSource;
+        msgAndSource._type = FLOW_EVENT;
+        msgAndSource._event._flow = event;
+        int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
+        if (numWritten != sizeof(msgAndSource))
+        {
+            if (storePartialWrite((char*)&msgAndSource,sizeof(msgAndSource),numWritten))
+                BLOCKED_FLOW_EVENTS.pop();
+            return;
+        }
+        BLOCKED_FLOW_EVENTS.pop();
+    }
+    CURRENTLY_BLOCKED = false;
     solClient_context_unregisterForFdEvents(opaqueContext_p,fd,events);
 }
 
 static void watchSocket()
 {
+    CURRENTLY_BLOCKED = true;
     solClient_returnCode_t rc;
     if ((rc = solClient_context_registerForFdEvents(context,SPAIR[1],SOLCLIENT_FD_EVENT_WRITE,socketWrittableCbFunc,NULL)) != SOLCLIENT_OK)
         printf("[%ld] Solace problem create fd monitor\n", THREAD_ID);
@@ -367,7 +401,7 @@ K kdbCallback(I d)
 /* The message receive callback function is mandatory for session creation. Gets called with msgs from direct subscriptions. */
 solClient_rxMsgCallback_returnCode_t defaultSubCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_opaqueMsg_pt msg_p, void *user_p )
 {
-    if (!BLOCKED_DIRECT_MSGS.empty())
+    if (CURRENTLY_BLOCKED)
     {
         BLOCKED_DIRECT_MSGS.push(msg_p);
         return SOLCLIENT_CALLBACK_TAKE_MSG;
@@ -393,7 +427,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
     msgAndSource._event._queueMsg._msg=msg_p;
     msgAndSource._event._queueMsg._flow=opaqueFlow_p;
 
-    if (!BLOCKED_QUEUE_MSGS.empty())
+    if (CURRENTLY_BLOCKED)
     {
         BLOCKED_QUEUE_MSGS.push(msgAndSource._event._queueMsg);
         return SOLCLIENT_CALLBACK_TAKE_MSG;
@@ -431,11 +465,17 @@ void flowEventCallback ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_flow_ev
         msgAndSource._event._flow->_eventInfo = eventInfo_p->info_p;
         msgAndSource._event._flow->_destType = destinationType;
         msgAndSource._event._flow->_destName = destinationName; 
-        int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
-        if (numWritten != sizeof(msgAndSource))
+        if (CURRENTLY_BLOCKED)
+            BLOCKED_FLOW_EVENTS.push(msgAndSource._event._flow);
+        else
         {
-            printf("[%ld] Solace flow problem writting to pipe\n", THREAD_ID);
-            storePartialWrite((char*)&msgAndSource,sizeof(msgAndSource),numWritten); 
+            int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
+            if (numWritten != sizeof(msgAndSource))
+            {
+                if (!storePartialWrite((char*)&msgAndSource,sizeof(msgAndSource),numWritten))
+                    BLOCKED_FLOW_EVENTS.push(msgAndSource._event._flow); 
+                watchSocket();
+            }
         }
     }
 
@@ -489,11 +529,17 @@ void eventCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_sessi
         msgAndSource._event._session->_eventType = eventInfo_p->sessionEvent;
         msgAndSource._event._session->_responseCode = eventInfo_p->responseCode;
         msgAndSource._event._session->_eventInfo = eventInfo_p->info_p;
-        int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
-        if (numWritten != sizeof(msgAndSource))
+        if (CURRENTLY_BLOCKED)
+            BLOCKED_SESSION_EVENTS.push(msgAndSource._event._session);
+        else
         {
-            printf("[%ld] Solace session problem writting to pipe\n", THREAD_ID);
-            storePartialWrite((char*)&msgAndSource,sizeof(msgAndSource),numWritten);
+            int numWritten = send(SPAIR[1], (char*)&msgAndSource, sizeof(msgAndSource), 0);
+            if (numWritten != sizeof(msgAndSource))
+            {
+                if (!storePartialWrite((char*)&msgAndSource,sizeof(msgAndSource),numWritten))
+                    BLOCKED_SESSION_EVENTS.push(msgAndSource._event._session);
+                watchSocket();
+            }
         }
     }
     switch ( eventInfo_p->sessionEvent ) 
