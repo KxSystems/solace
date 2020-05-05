@@ -50,11 +50,11 @@ Q_SCRIPT_DIR=${QHOME}${Q_PATH_SEP}
 Q_SHARED_LIB_DIR="${QHOME}${Q_PATH_SEP}${Q_HOST_TYPE}${Q_SHARED_LIB_DIR}${Q_MACH_TYPE}${Q_PATH_SEP}"
 
 # check destination directory exists
-if [ ! -d "$Q_SCRIPT_DIR" ]; then
+if [ ! -w "$Q_SCRIPT_DIR" ]; then
     echo "ERROR: Directory '$Q_SCRIPT_DIR' does not exist"
     exit 1
 fi
-if [ ! -d "$Q_SHARED_LIB_DIR" ]; then
+if [ ! -w "$Q_SHARED_LIB_DIR" ]; then
     echo "ERROR: Directory '$Q_SHARED_LIB_DIR' does not exist"
     exit 1
 fi
@@ -69,8 +69,16 @@ fi
 
 echo "Copying script to $Q_SCRIPT_DIR ..."
 cp script/* $Q_SCRIPT_DIR
+if [ $? -ne 0 ]; then
+    echo "ERROR: copy failed"
+    exit 1
+fi
 echo "Copying shared lib to $Q_SHARED_LIB_DIR ..."
 cp lib/* $Q_SHARED_LIB_DIR
+if [ $? -ne 0 ]; then
+    echo "ERROR: copy failed"
+    exit 1
+fi
 
 echo "Install complete"
 exit 0
