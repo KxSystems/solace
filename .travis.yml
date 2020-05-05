@@ -41,7 +41,7 @@ jobs:
 
     # LINUX BUILD
     - stage: build Release
-      if: branch = master
+      if: branch != coverity_scan
       name: "Linux Build Release"
       os: linux
       before_install:
@@ -64,7 +64,7 @@ jobs:
 
     # OSX BUILD
     - stage: build Release
-      if: branch = master
+      if: branch != coverity_scan
       name: "MacOS Build Release"
       os: osx
       before_install:
@@ -87,7 +87,7 @@ jobs:
 
     # WINDOWS (VISUAL STUDIO 2017) BUILD
     - stage: build Release
-      if: branch = master
+      if: branch != coverity_scan
       name: "Windows MVS 2017 Build Release"
       os: windows
       before_install:
