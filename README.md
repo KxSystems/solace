@@ -94,12 +94,20 @@ See examples and API documentation on how to tailor the interface for your needs
 
 ##### Windows
 
-    1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
-    2. Unzip the Solace API to a directory on the machine which the end user can read from.
-    3. Add the libsolclient.dll lib directory to the kdb lib (directory e.g. /usr/local/q/w64)
-    4. Copy `kdbsolace.so` which was built or downloaded earlier, to your KDB+ install binary dir e.g. if KDB+ installed at `/usr/local/q`, place the shared library into `/usr/local/q/w64/`.
+Before installing, install the Solace C API if you have not yet done so:
 
-The q script to load the solace API (`solace.q`) can be placed in the current working directory or within the KDB+ install directory.
+1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
+2. Unzip the Solace API to a directory on the machine which the end user can read from.
+3. Add the libsolclient.dll lib directory to the kdb lib (directory e.g. C:\q\w64)
+
+To install the library and scripts, either
+
+- run the provided install.bat
+
+or
+
+- copy `kdbsolace.dll` which was built or downloaded earlier, to your KDB+ install binary dir e.g. if KDB+ installed at `C:\q`, place the shared library into `C:\q\w64\`.
+- copy the q script to load the solace API (`solace.q`) can be placed in the current working directory or within the KDB+ install directory.
 
 See examples and API documentation on how to tailor the interface for your needs.
 
