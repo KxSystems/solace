@@ -11,7 +11,8 @@ RUN mkdir -p /usr/local/solaceapi/ && cd /usr/local/solaceapi/ && wget https://p
 COPY examples /usr/local/solace
 ENV LD_LIBRARY_PATH /usr/local/solaceapi/lib/:$LD_LIBRARY_PATH
 
-COPY build/kdbsolace/lib/kdbsolace.so /usr/local/q/l64/
-COPY script/solace.q /usr/local/q/
+ADD build/kdbsolace /kdbsolace
+RUN cd /kdbsolace && ./install.sh
+
 WORKDIR /usr/local/solace/
 CMD ["/bin/bash"]
