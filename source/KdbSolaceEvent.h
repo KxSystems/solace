@@ -36,16 +36,18 @@ struct KdbSolaceEventQueueMsg
     solClient_opaqueFlow_pt _flow;
 };
 
+typedef union
+{
+    KdbSolaceEventQueueMsg          _queueMsg;
+    KdbSolaceEventFlowDetail*       _flow;
+    KdbSolaceEventSessionDetail*    _session;
+    solClient_opaqueMsg_pt          _directMsg;
+} KDB_SOLACE_EVENT; 
+
 struct KdbSolaceEvent
 {
-    KDB_SOLACE_EVENT_TYPE           _type;
-    union
-    {
-        KdbSolaceEventQueueMsg          _queueMsg;
-        KdbSolaceEventFlowDetail*       _flow;
-        KdbSolaceEventSessionDetail*    _session;
-        solClient_opaqueMsg_pt          _directMsg;
-    } _event; 
+    KDB_SOLACE_EVENT_TYPE   _type;
+    KDB_SOLACE_EVENT        _event; 
 };
 
 #pragma pack(pop, id)
