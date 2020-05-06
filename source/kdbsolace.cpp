@@ -187,8 +187,7 @@ static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, so
 static void watchSocket()
 {
     CURRENTLY_BLOCKED = true;
-    solClient_returnCode_t rc;
-    if ((rc = solClient_context_registerForFdEvents(context,SPAIR[1],SOLCLIENT_FD_EVENT_WRITE,socketWrittableCbFunc,NULL)) != SOLCLIENT_OK)
+    if (solClient_context_registerForFdEvents(context,SPAIR[1],SOLCLIENT_FD_EVENT_WRITE,socketWrittableCbFunc,NULL) != SOLCLIENT_OK)
         printf("[%ld] Solace problem create fd monitor\n", THREAD_ID);
 }
 
