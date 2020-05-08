@@ -1,20 +1,21 @@
 
 # kdb+ interface for Solace PubSub+ broker
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/kxsystems/solace)](https://github.com/kxsystems/solace/releases) [![Travis (.org) branch](https://img.shields.io/travis/kxsystems/solace/master?label=travis%20build)](https://travis-ci.org/kxsystems/solace/branches)
+
 ## Introduction
 
-This interface provides a mechanism for Solace PubSub+ brokers to interact with kdb+.
+This interface provides a mechanism for Solace PubSub+ brokers to interact with kdb+. The interface is a thin wrapper around the Solace C api documented [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/index.html)
 
-## New to KDB+ ?
+## New to kdb+ ?
 
 Kdb+ is the world's fastest time-series database, optimized for ingesting, analyzing and storing massive amounts of structured data. To get started with kdb+, please visit https://code.kx.com/q/learn/ for downloads and developer information. For general information, visit https://kx.com/
 
 ## New to Solace PubSub+ ?
 
-Solace PubSub+ Event Broker efficiently streams events and information  
-across cloud, on-premises and IoT environments. The “+” in PubSub+ means it supports a wide range of message exchange patterns beyond publish/subscribe, including request/reply, streaming and replay, as well as different qualities of service, such as best effort and guaranteed delivery.
+Solace PubSub+ Event Broker efficiently streams events and information across cloud, on-premises and within IoT environments. The “+” in PubSub+ means it supports a wide range of message exchange patterns beyond publish/subscribe. These include request/reply, streaming and replay, as well as different qualities of service, such as best effort and guaranteed delivery.
 
-You can get started quickly by using free Standard Edition of our [software broker](https://solace.com/products/event-broker/software/) or spin up a free instance on [Solace Cloud](https://console.solace.cloud/login/new-account).
+You can get started quickly by using free Standard Edition of the Solace [software broker](https://solace.com/products/event-broker/software/) or spin up a free instance on [Solace Cloud](https://console.solace.cloud/login/new-account).
 
 If you have any Solace related questions, you can raise them at [Solace Community](https://solace.community/).
 
@@ -34,14 +35,14 @@ Follow these steps:
 
 For example, on Linux/Mac, to create a build within the build directory
 
-```
+```bash
 export SOLACE_API_DIR=/home/myuser/solaceapi/
 cd build
 cmake ../
 make install
 ```
 
-You should then find the resulting files in a newly created api dir, that should reside within the build directory.
+You should then find the resulting files in a newly created api dir, which should reside within the build directory.
 
 ### Windows
 
@@ -63,7 +64,7 @@ In order to pub/sub with Solace, you'll need to be connected to a [PubSub+ event
 
 If you don't already have an event broker running, you can avail of a free standard edition [docker based broker](https://github.com/SolaceLabs/solace-single-docker-compose) or a [free cloud based instance](https://console.solace.cloud/login/new-account) (NOTE: other versions and enterprise solutions are also available).
 
-### KDB+ Solace Integration
+### kdb+ Solace Integration
 
 #### Download
 
@@ -86,8 +87,8 @@ To install the library and scripts, either
 
 or
 
-- copy `kdbsolace.so` which was built or downloaded earlier to your KDB+ folder. If on a Linux 64bit machine with KDB+ installed in `/usr/local/q`, place the shared library into `/usr/local/q/l64/`.
-- the q script to load the solace API (`solace.q`) can be placed in the current working directory or within the KDB+ install directory.
+- copy `kdbsolace.so` which was built or downloaded earlier to your kdb+ folder. If on a Linux 64bit machine with kdb+ installed in `/usr/local/q`, place the shared library into `/usr/local/q/l64/`.
+- the q script to load the solace API (`solace.q`) can be placed in the current working directory or within the kdb+ install directory.
 
 
 See examples and API documentation on how to tailor the interface for your needs.
@@ -106,8 +107,8 @@ To install the library and scripts, either
 
 or
 
-- copy `kdbsolace.dll` which was built or downloaded earlier, to your KDB+ install binary dir e.g. if KDB+ installed at `C:\q`, place the shared library into `C:\q\w64\`.
-- copy the q script to load the solace API (`solace.q`) can be placed in the current working directory or within the KDB+ install directory.
+- copy `kdbsolace.dll` which was built or downloaded earlier, to your kdb+ install binary dir e.g. if kdb+ installed at `C:\q`, place the shared library into `C:\q\w64\`.
+- copy the q script to load the solace API (`solace.q`) can be placed in the current working directory or within the kdb+ install directory.
 
 See examples and API documentation on how to tailor the interface for your needs.
 
@@ -126,8 +127,8 @@ To install the library and scripts, either
 
 or
 
-- Copy `kdbsolace.so` which was built or downloaded earlier, to your KDB+ install binary dir e.g. if KDB+ installed at `/usr/local/q`, place the shared library into `/usr/local/q/m64/`..
-- The q script to load the solace API (`solace.q`) can be placed in the current working directory or within the KDB+ install directory.
+- Copy `kdbsolace.so` which was built or downloaded earlier, to your kdb+ install binary dir e.g. if kdb+ installed at `/usr/local/q`, place the shared library into `/usr/local/q/m64/`..
+- The q script to load the solace API (`solace.q`) can be placed in the current working directory or within the kdb+ install directory.
 
 ## Unsupported Functionality
 
