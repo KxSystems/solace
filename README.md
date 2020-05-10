@@ -136,7 +136,7 @@ Currently transactional based messaging is unsupported.
 
 ## Documentation
 
-Documentation outlining the functionality available for this interface can be found [here](https://github.com/q/interfaces/solace).
+Documentation outlining the functionality available for this interface can be found [here](https://code.kx.com/q/interfaces/solace).
 
 ## Status
 The Solace interface is still in development and is provided here as a beta release under an Apache 2.0 license.
