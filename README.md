@@ -139,8 +139,8 @@ Currently transactional based messaging is unsupported.
 Documentation outlining the functionality available for this interface can be found [here](https://code.kx.com/q/interfaces/solace).
 
 ## Status
-The Solace interface is still in development and is provided here as a beta release under an Apache 2.0 license.
+The Solace interface is provided here under an Apache 2.0 license.
 
 If you find issues with the interface or have feature requests please consider raising an issue [here](https://github.com/KxSystems/solace/issues).
 
-If you wish to contribute to this project please follow the contributing guide [here](https://github.com/KxSystems/solace/blob/master/CONTRIBUTING.md).
+If you wish to contribute to this project please follow the contributing guide [here](CONTRIBUTING.md).
