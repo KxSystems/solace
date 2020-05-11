@@ -19,42 +19,9 @@ You can get started quickly by using free Standard Edition of the Solace [softwa
 
 If you have any Solace related questions, you can raise them at [Solace Community](https://solace.community/).
 
-## Building Interface From Source
+## Documentation
 
-### Linux/Mac
-
-Building the interface from source requires `gcc`, `gcc c++`, `make` and `cmake` packages installed on your development machine (e.g. xcode for Mac).
-
-Follow these steps:
-
- 1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
- 2. Set an environment variable `SOLACE_API_DIR` to the location of the unzipped Solace C API.
- 3. Run `cmake`
- 4. Run `make install`
-
-
-For example, on Linux/Mac, to create a build within the build directory
-
-```bash
-export SOLACE_API_DIR=/home/myuser/solaceapi/
-cd build
-cmake ../
-make install
-```
-
-You should then find the resulting files in a newly created api dir, which should reside within the build directory.
-
-### Windows
-
-Building the interface from source requires Visual Studio
-
-Follow these steps for Visual Studio 15 (2017) and above:
-
-  1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
-  2. Set an environment variable `SOLACE_API_DIR` to the location of the unzipped Solace C API.
-  3. Run `cmake -G "Visual Studio 15 2017 Win64"` 
-
-This will generate a visual studio build package. 
+Documentation outlining the functionality available for this interface can be found [here](https://code.kx.com/q/interfaces/solace).
 
 ## Running
 
@@ -76,10 +43,10 @@ Download the latest release from our [releases page](https://github.com/KxSystem
 
 Before installing, install the Solace C API if you have not yet done so:
 
-  1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
-  2. Unzip the Solace API to a directory on the machine which the end user can read from.
-  3. Add the lib directory to the `LD_LIBRARY_PATH` environment variable e.g. if unzipped to `/usr/local/solaceapi/`
-     - `export LD_LIBRARY_PATH /usr/local/solaceapi/lib/:$LD_LIBRARY_PATH`
+    1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
+    2. Unzip the Solace API to a directory on the machine which the end user can read from.
+    3. Add the lib directory to the `LD_LIBRARY_PATH` environment variable e.g. if unzipped to `/usr/local/solaceapi/`
+       - `export LD_LIBRARY_PATH /usr/local/solaceapi/lib/:$LD_LIBRARY_PATH`
 
 To install the library and scripts, either
 
@@ -116,10 +83,10 @@ See examples and API documentation on how to tailor the interface for your needs
 
 Before installing, install the Solace C API if you have not yet done so:
 
-  1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
-  2. Unzip the Solace API to a directory on the machine which the end user can read from.
-  3. Add the lib directory to the `DYLD_LIBRARY_PATH` environment variable e.g. if unzipped to `/Users/jim/solaceapi/`
-     - `export DYLD_LIBRARY_PATH /Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH`
+    1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
+    2. Unzip the Solace API to a directory on the machine which the end user can read from.
+    3. Add the lib directory to the `DYLD_LIBRARY_PATH` environment variable e.g. if unzipped to `/Users/jim/solaceapi/`
+       - `export DYLD_LIBRARY_PATH /Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH`
 
 To install the library and scripts, either
 
@@ -134,9 +101,42 @@ or
 
 Currently transactional based messaging is unsupported.
 
-## Documentation
+## Building Interface From Source
 
-Documentation outlining the functionality available for this interface can be found [here](https://code.kx.com/q/interfaces/solace).
+### Linux/Mac
+
+Building the interface from source requires `gcc`, `gcc c++`, `make` and `cmake` packages installed on your development machine (e.g. xcode for Mac).
+
+Follow these steps:
+
+ 1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
+ 2. Set an environment variable `SOLACE_API_DIR` to the location of the unzipped Solace C API.
+ 3. Run `cmake`
+ 4. Run `make install`
+
+
+For example, on Linux/Mac, to create a build within the build directory
+
+```bash
+export SOLACE_API_DIR=/home/myuser/solaceapi/
+cd build
+cmake ../
+make install
+```
+
+You should then find the resulting files in a newly created api dir, which should reside within the build directory.
+
+### Windows
+
+Building the interface from source requires Visual Studio
+
+Follow these steps for Visual Studio 15 (2017) and above:
+
+  1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
+  2. Set an environment variable `SOLACE_API_DIR` to the location of the unzipped Solace C API.
+  3. Run `cmake -G "Visual Studio 15 2017 Win64"` 
+
+This will generate a visual studio build package. 
 
 ## Status
 The Solace interface is provided here under an Apache 2.0 license.
