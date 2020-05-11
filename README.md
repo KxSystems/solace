@@ -1,7 +1,7 @@
 
 # kdb+ interface for Solace PubSub+ broker
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/kxsystems/solace)](https://github.com/kxsystems/solace/releases) [![Travis (.org) branch](https://img.shields.io/travis/kxsystems/solace/master?label=travis%20build)](https://travis-ci.org/kxsystems/solace/branches)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/kxsystems/solace?include_prereleases)](https://github.com/kxsystems/solace/releases) [![Travis (.org) branch](https://img.shields.io/travis/kxsystems/solace/master?label=travis%20build)](https://travis-ci.org/kxsystems/solace/branches)
 
 ## Introduction
 
