@@ -46,7 +46,7 @@ Before installing, install the Solace C API if you have not yet done so:
     1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
     2. Unzip the Solace API to a directory on the machine which the end user can read from.
     3. Add the lib directory to the `LD_LIBRARY_PATH` environment variable e.g. if unzipped to `/usr/local/solaceapi/`
-       - `export LD_LIBRARY_PATH /usr/local/solaceapi/lib/:$LD_LIBRARY_PATH`
+       - `export LD_LIBRARY_PATH=/usr/local/solaceapi/lib/:$LD_LIBRARY_PATH`
 
 To install the library and scripts, either
 
@@ -86,7 +86,7 @@ Before installing, install the Solace C API if you have not yet done so:
     1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
     2. Unzip the Solace API to a directory on the machine which the end user can read from.
     3. Add the lib directory to the `DYLD_LIBRARY_PATH` environment variable e.g. if unzipped to `/Users/jim/solaceapi/`
-       - `export DYLD_LIBRARY_PATH /Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH`
+       - `export DYLD_LIBRARY_PATH=/Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH`
 
 To install the library and scripts, either
 
