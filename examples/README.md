@@ -10,20 +10,20 @@ Note, as per the installation steps, that `script/solace.q` should be placed in 
 ## Running Examples
 
 - [Utilities](#utilities)
-  * [sol_version.q](#sol-versionq)
-  * [sol_capabilities.q](#sol-capabilitiesq)
-- [Endpoint Interaction](#endpoint-interaction)
-  * [sol_endpoint_create.q](#sol-endpoint-createq)
-  * [sol_endpoint_destroy.q](#sol-endpoint-destroyq)
-  * [sol_topic_to_queue_mapping.q](#sol-topic-to-queue-mappingq)
-- [Pub/Sub With Direct Messages](#pub-sub-with-direct-messages)
-  * [sol_pub_direct.q](#sol-pub-directq)
-  * [sol_sub_direct.q](#sol-sub-directq)
-  * [sol_pub_directrequestor.q](#sol-pub-directrequestorq)
-  * [sol_sub_directreplier.q](#sol-sub-directreplierq)
-- [Pub/Sub With Guaranteed Messages](#pub-sub-with-guaranteed-messages)
-  * [sol_pub_persist.q](#sol-pub-persistq)
-  * [sol_sub_persist.q](#sol-sub-persistq)
+  * [sol_version.q](#sol_versionq)
+  * [sol_capabilities.q](#sol_capabilitiesq)
+- [Endpoint Interaction](#endpoint_interaction)
+  * [sol_endpoint_create.q](#sol_endpoint_createq)
+  * [sol_endpoint_destroy.q](#sol_endpoint_destroyq)
+  * [sol_topic_to_queue_mapping.q](#sol_topic_to_queue_mappingq)
+- [Pub/Sub With Direct Messages](#pub_sub_with_direct_messages)
+  * [sol_pub_direct.q](#sol_pub_directq)
+  * [sol_sub_direct.q](#sol_sub_directq)
+  * [sol_pub_directrequestor.q](#sol_pub_directrequestorq)
+  * [sol_sub_directreplier.q](#sol_sub_directreplierq)
+- [Pub/Sub With Guaranteed Messages](#pub_sub_with_guaranteed_messages)
+  * [sol_pub_persist.q](#sol_pub_persistq)
+  * [sol_sub_persist.q](#sol_sub_persistq)
 
 ### Utilities
 
@@ -168,7 +168,7 @@ Sends a persistent/guaranteed message to an existing endpoint (see `sol_endpoint
 Example:
 
 ```c
-q sol_pub_persist.q -desttype "queue" -destname "Q/1" -data "hello world"  -correlationid 555
+q sol_pub_persist.q -dtype "queue" -dest "Q/1" -data "hello world"  -correlationid 555
 ```
 
 Params:
@@ -189,7 +189,7 @@ Subscribes, while printing and acknowledging each message
 Example:
 
 ```C
-q sol_sub_persist.q -destname "Q/1"
+q sol_sub_persist.q -dest "Q/1"
 ```
 
 Params:
