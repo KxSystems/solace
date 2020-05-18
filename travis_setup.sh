@@ -10,7 +10,7 @@ elif [ "$TRAVIS_OS_NAME" == "linux" ]; then
   tar xvf C_API_LINUX64 -C ./cbuild --strip-components=1
 elif [ "$TRAVIS_OS_NAME" == "windows" ]; then
   wget -q https://products.solace.com/download/C_API_WIN64
-  tar xvf C_API_WIN64 -C ./solace --strip-components=1
+  tar xvf C_API_WIN64 -C ./cbuild --strip-components=1
 else
   echo "$TRAVIS_OS_NAME is currently not supported"  
 fi
