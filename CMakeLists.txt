@@ -6,12 +6,12 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -DKXVER=3")
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -DKXVER=3")
 
 set(MY_LIBRARY_NAME kdbsolace)
-file(GLOB SRC_FILES source/*.cpp)
+file(GLOB SRC_FILES src/*.cpp)
 set_source_files_properties(${SRC_FILES} PROPERTIES LANGUAGE CXX)
 
 message(STATUS "Generator : ${CMAKE_GENERATOR}")
 message(STATUS "Build Tool : ${CMAKE_BUILD_TOOL}")
-message(STATUS "Solace API : $ENV{SOLACE_API_DIR}")
+message(STATUS "Solace API : $ENV{BUILD_HOME}")
 
 include_directories (
     $ENV{SOLACE_API_DIR}/include
@@ -19,7 +19,7 @@ include_directories (
 
 find_library(SOLCLIENT_LIBRARY
     NAMES solclient libsolclient
-    HINTS "$ENV{SOLACE_API_DIR}/lib/" "$ENV{SOLACE_API_DIR}/lib/Win64"
+    HINTS "$ENV{BUILD_HOME}/lib/" "$ENV{BUILD_HOME}/lib/Win64"
 )
 
 if (CMAKE_GENERATOR MATCHES "Visual Studio")
