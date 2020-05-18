@@ -14,7 +14,7 @@ message(STATUS "Build Tool : ${CMAKE_BUILD_TOOL}")
 message(STATUS "Solace API : $ENV{BUILD_HOME}")
 
 include_directories (
-    $ENV{SOLACE_API_DIR}/include
+    $ENV{BUILD_HOME}/include
 )
 
 find_library(SOLCLIENT_LIBRARY
