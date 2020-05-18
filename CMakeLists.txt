@@ -41,5 +41,5 @@ set_target_properties(${MY_LIBRARY_NAME} PROPERTIES PREFIX "")
 
 install(FILES README.md install.sh install.bat DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace/)
 install(DIRECTORY examples DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace)
-install(DIRECTORY script DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace)
+install(DIRECTORY q DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace)
 install(TARGETS ${MY_LIBRARY_NAME} DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace/lib OPTIONAL)
