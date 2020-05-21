@@ -42,7 +42,7 @@ endif()
 target_link_libraries(${MY_LIBRARY_NAME} ${SOLCLIENT_LIBRARY} ${LINK_LIBS})
 set_target_properties(${MY_LIBRARY_NAME} PROPERTIES PREFIX "")
 
-install(FILES README.md install.sh install.bat DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace/)
+install(FILES README.md LICENSE install.sh install.bat DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace/)
 install(DIRECTORY examples DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace)
 install(DIRECTORY q DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace)
 install(TARGETS ${MY_LIBRARY_NAME} DESTINATION ${PROJECT_BINARY_DIR}/kdbsolace/lib OPTIONAL)
