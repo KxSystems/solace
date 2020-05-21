@@ -1,18 +1,32 @@
 @echo off
 
 IF "%QHOME%"=="" (
-    ECHO Enviroment variable QHOME is NOT defined 
+    ECHO ERROR: Enviroment variable QHOME is NOT defined 
     EXIT /B
 )
 
 IF NOT EXIST %QHOME%\w64 (
-    ECHO Installation destination %QHOME%\w64 does not exist
+    ECHO ERROR: Installation destination %QHOME%\w64 does not exist
     EXIT /B
 )
 
-ECHO Copying scripts to %QHOME%
-COPY script\* %QHOME%
-ECHO Copying dll to %QHOME%\w64
-COPY lib\* %QHOME%\w64\
+
+IF EXIST q (
+    ECHO Copying q script to %QHOME%
+    COPY q\* %QHOME%
+    IF %ERRORLEVEL% NEQ 0 (
+        ECHO ERROR: Copy failed
+        EXIT /B %ERRORLEVEL%
+    )
+)
+
+IF EXIST lib (
+    ECHO Copying DLL to %QHOME%\w64
+    COPY lib\* %QHOME%\w64\
+    IF %ERRORLEVEL% NEQ 0 (
+        ECHO ERROR: Copy failed
+        EXIT /B %ERRORLEVEL%
+    )
+)
 
 ECHO Installation complete
