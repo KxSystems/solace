@@ -110,7 +110,7 @@ Building the interface from source requires `gcc`, `gcc c++`, `make` and `cmake`
 Follow these steps:
 
  1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
- 2. Set an environment variable `SOLACE_API_DIR` to the location of the unzipped Solace C API.
+ 2. Set an environment variable `BUILD_HOME` to the location of the unzipped Solace C API.
  3. Run `cmake`
  4. Run `make install`
 
@@ -118,7 +118,7 @@ Follow these steps:
 For example, on Linux/Mac, to create a build within the build directory
 
 ```bash
-export SOLACE_API_DIR=/home/myuser/solaceapi/
+export BUILD_HOME=/home/myuser/solaceapi/
 cd build
 cmake ../
 make install
@@ -133,7 +133,7 @@ Building the interface from source requires Visual Studio
 Follow these steps for Visual Studio 15 (2017) and above:
 
   1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
-  2. Set an environment variable `SOLACE_API_DIR` to the location of the unzipped Solace C API.
+  2. Set an environment variable `BUILD_HOME` to the location of the unzipped Solace C API.
   3. Run `cmake -G "Visual Studio 15 2017 Win64"` 
 
 This will generate a visual studio build package. 
