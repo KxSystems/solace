@@ -97,4 +97,4 @@ deploy:
   on:
     tags: true
     condition: $TRAVIS_OS_NAME = windows || $TRAVIS_OS_NAME = osx || ($TRAVIS_DIST = trusty && $TRAVIS_OS_NAME = linux) 
-  cleanup: 'false' #  prevent Travis CI from resetting your working directory and deleting all changes made during the build 
+  skip_cleanup: 'true' #  prevent Travis CI from resetting your working directory and deleting all changes made during the build 
