@@ -66,15 +66,15 @@ Before installing, install the Solace C API if you have not yet done so:
 
 1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
 2. Unzip the Solace API to a directory on the machine which the end user can read from.
-3. Add the libsolclient.dll lib directory to the kdb lib (directory e.g. C:\q\w64)
+3. Add the libsolclient.dll lib directory to the kdb lib (directory e.g. C:\q\w64 for 64-bit)
 
 To install the library and scripts, either
 
-- run the provided install.bat
+- run the provided install.bat (or install32.bat for 32-bit non-commercial version)
 
 or
 
-- copy `kdbsolace.dll` which was built or downloaded earlier, to your kdb+ install binary dir e.g. if kdb+ installed at `C:\q`, place the shared library into `C:\q\w64\`.
+- copy `kdbsolace.dll` which was built or downloaded earlier, to your kdb+ install binary dir e.g. if kdb+ installed at `C:\q`, place the shared library into `C:\q\w64\ `for 64-bit version.
 - copy the q script to load the solace API (`solace.q`) can be placed in the current working directory or within the kdb+ install directory.
 
 See examples and API documentation on how to tailor the interface for your needs.
@@ -134,7 +134,7 @@ Follow these steps for Visual Studio 15 (2017) and above:
 
   1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
   2. Set an environment variable `BUILD_HOME` to the location of the unzipped Solace C API.
-  3. Run `cmake -G "Visual Studio 15 2017 Win64"` 
+  3. Run `cmake -G "Visual Studio 15 2017 Win64"`  (or `cmake "Visual Studio 16 2019" -A Win32` if building 32-bit version)
 
 This will generate a visual studio build package. 
 

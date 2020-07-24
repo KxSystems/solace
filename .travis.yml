@@ -2,12 +2,19 @@ jobs:
   include:
   - dist: xenial
     os: linux
+    env: ARCH="x64"
   - dist: trusty 
     os: linux
+    env: ARCH="x64"
   - dist: bionic
     os: linux
+    env: ARCH="x64"
   - os: osx
+    env: ARCH="x64"
   - os: windows
+    env: ARCH="x64"
+  - os: windows
+    env: ARCH="x86"
 language: c
 compiler: gcc
 os: linux
@@ -63,14 +70,20 @@ before_install:
     else
       export FILE_TAIL="tgz";
     fi
-  - export FILE_NAME=$FILE_ROOT-$TRAVIS_OS_NAME-$TRAVIS_BRANCH.$FILE_TAIL
+  - export FILE_NAME=$FILE_ROOT-$TRAVIS_OS_NAME-$ARCH-$TRAVIS_BRANCH.$FILE_TAIL
 
   # Make binaries for the library as appropriate
-  - if [[ $BUILD == "True" && $TRAVIS_OS_NAME == "windows" ]]; then
+  - if [[ $BUILD == "True" && $TRAVIS_OS_NAME == "windows" && $ARCH == "x64" ]]; then
       cd cmake && cmake -G "Visual Studio 15 2017 Win64" .. ;
       export MSBUILD_PATH="/c/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin/";
       export PATH=$MSBUILD_PATH:$PATH;
       MSBuild.exe INSTALL.vcxproj //m //nologo //verbosity:normal //p:Configuration=Release //p:Platform=x64;
+      cd ..;
+    elif [[ $BUILD == "True" && $TRAVIS_OS_NAME == "windows" && $ARCH == "x86" ]]; then
+      cd cmake && cmake "Visual Studio 16 2019" -A Win32 .. ;
+      export MSBUILD_PATH="/c/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin/";
+      export PATH=$MSBUILD_PATH:$PATH;
+      MSBuild.exe INSTALL.vcxproj //m //nologo //verbosity:normal //p:Configuration=Release;
       cd ..;
     elif [[ $BUILD == "True" && ( $TRAVIS_OS_NAME == "linux" || $TRAVIS_OS_NAME == "osx" ) ]]; then
       cd cmake && cmake .. -DCMAKE_BUILD_TYPE=Release && make install && cd .. ;
@@ -85,7 +98,7 @@ script:
     elif [[ $BUILD == "True" && ( $TRAVIS_OS_NAME == "linux" || $TRAVIS_OS_NAME == "osx" ) ]]; then  
       tar  -zcvf $FILE_NAME -C cmake/$FILE_ROOT .;
     elif [[ $TRAVIS_OS_NAME == "windows" ]]; then
-      7z a -tzip $FILE_NAME README.md install.bat LICENSE q examples;
+      7z a -tzip $FILE_NAME README.md install.bat install32.bat LICENSE q examples;
     elif [[ $TRAVIS_OS_NAME == "linux" || $TRAVIS_OS_NAME == "osx" ]]; then
       tar  -zcvf $FILE_NAME README.md install.sh LICENSE q examples;
     fi
