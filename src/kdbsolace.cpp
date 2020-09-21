@@ -210,7 +210,13 @@ void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
     bool isRequest = (solClient_msg_getReplyTo(msg,&replyDest,sizeof(replyDest)) == SOLCLIENT_OK);
     void* dataPtr = NULL;
     solClient_uint32_t dataSize = 0;
-    solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize);
+    solClient_returnCode_t err = solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize);
+    if (err != SOLCLIENT_OK) 
+    {
+        printf("[%ld] Solace issue getting binary attachment from received direct message (msg destination:%s) - err %d - %s\n", THREAD_ID, destination, err, solClient_returnCodeToString(err));
+        solClient_msg_free(&msg);
+        return;
+    }
     K payload = ktn(KG, dataSize);
     memcpy(payload->G0, dataPtr, dataSize);
 
