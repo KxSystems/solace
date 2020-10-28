@@ -195,6 +195,25 @@ void kdbCallbackFlowEvent(const KdbSolaceEventFlowDetail* event)
     delete (event);    
 }
 
+solClient_returnCode_t getBinaryAttachment(solClient_opaqueMsg_pt msg, K* payload)
+{
+    void* dataPtr = NULL;
+    solClient_uint32_t dataSize = 0;
+    solClient_returnCode_t err = solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize);
+    if (err != SOLCLIENT_OK) 
+    {
+        const char* destination = "";
+        solClient_destination_t msgDest;
+        if (solClient_msg_getDestination(msg,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
+            destination = msgDest.dest;
+        printf("[%ld] Solace issue getting binary attachment from received message (msg destination:%s) - err %d - %s\n", THREAD_ID, destination, err, solClient_returnCodeToString(err));
+        return err;
+    }
+    *payload = ktn(KG, dataSize);
+    memcpy((*payload)->G0, dataPtr, dataSize);
+    return err;
+}
+
 void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
 {
     if (KDB_DIRECT_MSG_CALLBACK_FUNC.empty())
@@ -208,18 +227,12 @@ void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
         destination = msgDest.dest;
     solClient_destination_t replyDest;
     bool isRequest = (solClient_msg_getReplyTo(msg,&replyDest,sizeof(replyDest)) == SOLCLIENT_OK);
-    void* dataPtr = NULL;
-    solClient_uint32_t dataSize = 0;
-    solClient_returnCode_t err = solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize);
-    if (err != SOLCLIENT_OK) 
-    {
-        printf("[%ld] Solace issue getting binary attachment from received direct message (msg destination:%s) - err %d - %s\n", THREAD_ID, destination, err, solClient_returnCodeToString(err));
+    K payload = NULL;
+    if (getBinaryAttachment(msg,&payload) != SOLCLIENT_OK)
+    {   
         solClient_msg_free(&msg);
         return;
     }
-    K payload = ktn(KG, dataSize);
-    memcpy(payload->G0, dataPtr, dataSize);
-
     solClient_bool_t redelivered = solClient_msg_isRedelivered(msg);
     solClient_bool_t discarded = solClient_msg_isDiscardIndication(msg);
     solClient_int64_t sendTime = 0;
@@ -294,17 +307,12 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     solClient_msg_getCorrelationId(msg,&correlationid);
     solClient_msgId_t msgId = 0;
     solClient_msg_getMsgId(msg,&msgId);
-    // payload 
-    void* dataPtr = NULL;
-    solClient_uint32_t dataSize = 0;
-    if (solClient_msg_getBinaryAttachmentPtr(msg, &dataPtr, &dataSize) != SOLCLIENT_OK)
-    {
-        printf("[%ld] Solace issue getting binary attachment from received message (id:%lld, type:%d, subscription:%s, msg destination:%s, msg destination type:%d)\n", THREAD_ID, msgId, flowDest.destType, flowDestName, msgDestName, msgDest.destType);
+    K payload = NULL;
+    if (getBinaryAttachment(msg,&payload) != SOLCLIENT_OK)
+    {   
         solClient_msg_free(&msg);
         return;
     }
-    K payload = ktn(KG, dataSize);
-    memcpy(payload->G0, dataPtr, dataSize);
     K keys = ktn(KS,6);
     kS(keys)[0]=ss((char*)"destType");
     kS(keys)[1]=ss((char*)"destName");
@@ -832,14 +840,12 @@ K senddirect_solace(K topic, K data)
     solClient_returnCode_t retCode = solClient_session_sendRequest ( session_p, msg_p, &replyMsg, timeout->i); 
     solClient_msg_free ( &msg_p );
     if (retCode == SOLCLIENT_OK)
-    { 
-        void* dataPtr = NULL;
-        solClient_uint32_t dataSize = 0;
-        solClient_msg_getBinaryAttachmentPtr(replyMsg, &dataPtr, &dataSize);
-        K payload = ktn(KG, dataSize);
-        memcpy(payload->G0, dataPtr, dataSize);
+    {
+        K payload = NULL;
+        retCode = getBinaryAttachment(replyMsg,&payload);
         solClient_msg_free(&replyMsg);
-        return payload;
+        if (retCode == SOLCLIENT_OK)
+            return payload;
     }
     return ki(retCode);
  }
@@ -927,14 +933,12 @@ K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K replyTyp
     solClient_returnCode_t retCode = solClient_session_sendRequest ( session_p, msg_p, &replyMsg, timeout->i); 
     solClient_msg_free ( &msg_p );
     if (retCode == SOLCLIENT_OK)
-    { 
-        void* dataPtr = NULL;
-        solClient_uint32_t dataSize = 0;
-        solClient_msg_getBinaryAttachmentPtr(replyMsg, &dataPtr, &dataSize);
-        K payload = ktn(KG, dataSize);
-        memcpy(payload->G0, dataPtr, dataSize);
+    {
+        K payload = NULL;
+        retCode = getBinaryAttachment(replyMsg,&payload);
         solClient_msg_free(&replyMsg);
-        return payload;
+        if (retCode == SOLCLIENT_OK)
+            return payload;
     }
     return ki(retCode);
 }
