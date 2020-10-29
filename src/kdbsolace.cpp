@@ -85,7 +85,9 @@ static int SPAIR[2];
 static std::string KDB_SESSION_EVENT_CALLBACK_FUNC;
 static std::string KDB_FLOW_EVENT_CALLBACK_FUNC;
 static std::string KDB_DIRECT_MSG_CALLBACK_FUNC;
+static std::string KDB_DIRECT_RAW_MSG_CALLBACK_FUNC;
 static std::string KDB_QUEUE_MSG_CALLBACK_FUNC;
+static std::string KDB_QUEUE_RAW_MSG_CALLBACK_FUNC;
 
 static std::map<std::string, solClient_opaqueFlow_pt> QUEUE_SUB_INFO;
 
@@ -214,9 +216,76 @@ solClient_returnCode_t getBinaryAttachment(solClient_opaqueMsg_pt msg, K* payloa
     return err;
 }
 
+solClient_returnCode_t getStringAttachment(solClient_opaqueMsg_pt msg, K* payload)
+{
+    const char* dataPtr = NULL;
+    solClient_uint32_t dataSize = 0;
+    solClient_returnCode_t err = solClient_msg_getBinaryAttachmentString(msg, &dataPtr);
+    if (err != SOLCLIENT_OK) 
+    {
+        const char* destination = "";
+        solClient_destination_t msgDest;
+        if (solClient_msg_getDestination(msg,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
+            destination = msgDest.dest;
+        printf("[%ld] Solace issue getting string attachment from received message (msg destination:%s) - err %d - %s\n", THREAD_ID, destination, err, solClient_returnCodeToString(err));
+        return err;
+    }
+    dataSize = strlen(dataPtr);
+    *payload = ktn(KC, dataSize);
+    memcpy((*payload)->G0, dataPtr, dataSize);
+    return err;
+}
+
+solClient_returnCode_t getXMLAttachment(solClient_opaqueMsg_pt msg, K* payload)
+{
+    void* dataPtr = NULL;
+    solClient_uint32_t dataSize = 0;
+    solClient_returnCode_t err = solClient_msg_getXmlPtr(msg, &dataPtr, &dataSize);
+    if (err != SOLCLIENT_OK) 
+    {
+        const char* destination = "";
+        solClient_destination_t msgDest;
+        if (solClient_msg_getDestination(msg,&msgDest,sizeof(msgDest)) == SOLCLIENT_OK)
+            destination = msgDest.dest;
+        printf("[%ld] Solace issue getting xml attachment from received message (msg destination:%s) - err %d - %s\n", THREAD_ID, destination, err, solClient_returnCodeToString(err));
+        return err;
+    }
+    *payload = ktn(KG, dataSize);
+    memcpy((*payload)->G0, dataPtr, dataSize);
+    return err;
+}
+
+K getPayloadAsXML(K msg)
+{
+    CHECK_PARAM_TYPE(msg,-KJ,"getPayloadAsXML");
+    K payload = NULL;
+    solClient_returnCode_t err = getXMLAttachment((solClient_opaqueMsg_pt)msg->j,&payload);
+    if (err != SOLCLIENT_OK)
+        return ki(err);
+    return payload;
+}
+K getPayloadAsString(K msg)
+{
+    CHECK_PARAM_TYPE(msg,-KJ,"getPayloadAsString");
+    K payload = NULL;
+    solClient_returnCode_t err = getStringAttachment((solClient_opaqueMsg_pt)msg->j,&payload);
+    if (err != SOLCLIENT_OK)
+        return ki(err);
+    return payload;
+}
+K getPayloadAsBinary(K msg)
+{
+    CHECK_PARAM_TYPE(msg,-KJ,"getPayloadAsBinary");
+    K payload = NULL;
+    solClient_returnCode_t err = getBinaryAttachment((solClient_opaqueMsg_pt)msg->j,&payload);
+    if (err != SOLCLIENT_OK)
+        return ki(err);
+    return payload;
+}
+
 void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
 {
-    if (KDB_DIRECT_MSG_CALLBACK_FUNC.empty())
+    if (KDB_DIRECT_MSG_CALLBACK_FUNC.empty() && KDB_DIRECT_RAW_MSG_CALLBACK_FUNC.empty())
     {
         solClient_msg_free(&msg);
         return;
@@ -228,7 +297,7 @@ void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
     solClient_destination_t replyDest;
     bool isRequest = (solClient_msg_getReplyTo(msg,&replyDest,sizeof(replyDest)) == SOLCLIENT_OK);
     K payload = NULL;
-    if (getBinaryAttachment(msg,&payload) != SOLCLIENT_OK)
+    if (!KDB_DIRECT_MSG_CALLBACK_FUNC.empty() && getBinaryAttachment(msg,&payload) != SOLCLIENT_OK)
     {   
         solClient_msg_free(&msg);
         return;
@@ -247,7 +316,11 @@ void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
     kS(keys)[3]=ss((char*)"sendTime");
     K vals = knk(4,kb(redelivered),kb(discarded),kb(isRequest),ktj(-KP,sendTime));
     K dict = xD(keys,vals);
-    K replyK = k(0,(char*)KDB_DIRECT_MSG_CALLBACK_FUNC.c_str(),ks((char*)destination),payload,dict,(K)0);
+    K replyK = NULL;
+    if (!KDB_DIRECT_RAW_MSG_CALLBACK_FUNC.empty())
+        replyK = k(0,(char*)KDB_DIRECT_RAW_MSG_CALLBACK_FUNC.c_str(),ks((char*)destination),kj((J)msg),dict,(K)0);
+    else
+        replyK = k(0,(char*)KDB_DIRECT_MSG_CALLBACK_FUNC.c_str(),ks((char*)destination),payload,dict,(K)0);
     if ((isRequest && replyK!=NULL) && (replyK->t == KG || replyK->t == -KS || replyK->t == KC))
     {
         solClient_opaqueMsg_pt replyMsg = NULL;
@@ -261,7 +334,7 @@ void kdbCallbackDirectMsgEvent(solClient_opaqueMsg_pt msg)
 
 void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
 {
-    if (KDB_QUEUE_MSG_CALLBACK_FUNC.empty())
+    if (KDB_QUEUE_MSG_CALLBACK_FUNC.empty() && KDB_QUEUE_RAW_MSG_CALLBACK_FUNC.empty())
         return;
 
     solClient_opaqueMsg_pt msg = msgEvent->_msg;
@@ -308,7 +381,7 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     solClient_msgId_t msgId = 0;
     solClient_msg_getMsgId(msg,&msgId);
     K payload = NULL;
-    if (getBinaryAttachment(msg,&payload) != SOLCLIENT_OK)
+    if (!KDB_QUEUE_MSG_CALLBACK_FUNC.empty() && getBinaryAttachment(msg,&payload) != SOLCLIENT_OK)
     {   
         solClient_msg_free(&msg);
         return;
@@ -322,10 +395,13 @@ void kdbCallbackQueueMsgEvent(const KdbSolaceEventQueueMsg* msgEvent)
     kS(keys)[5]=ss((char*)"msgId");
     K vals = knk(6,ki(msgDest.destType),kp((char*)msgDestName),ki(replyto.destType),kp((char*)replyToName),kp((char*)correlationid),kj(msgId));
     K dict = xD(keys,vals);
-    
-    K result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), ks((char*)flowDestName), payload, dict, (K)0);
+    K result = NULL;
+    if (!KDB_QUEUE_RAW_MSG_CALLBACK_FUNC.empty())
+        result = k(0, (char*)KDB_QUEUE_RAW_MSG_CALLBACK_FUNC.c_str(), ks((char*)flowDestName), kj((J)msg), dict, (K)0);
+    else
+        result = k(0, (char*)KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(), ks((char*)flowDestName), payload, dict, (K)0);
     if(-128 == result->t)
-        printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, KDB_QUEUE_MSG_CALLBACK_FUNC.c_str(),flowDestName);
+        printf("[%ld] Solace calling KDB+ function %s returned with error. Using received data (destination:%s)\n", THREAD_ID, (KDB_QUEUE_RAW_MSG_CALLBACK_FUNC.empty())?KDB_QUEUE_MSG_CALLBACK_FUNC.c_str():KDB_QUEUE_RAW_MSG_CALLBACK_FUNC.c_str(),flowDestName);
 
     solClient_msg_free(&msg);
 }
@@ -859,6 +935,15 @@ K callbacktopic_solace(K func)
     return ki(SOLCLIENT_OK);
 }
 
+K callbacktopicraw_solace(K func)
+{
+    CHECK_PARAM_STRING_TYPE(func,"callbacktopicraw_solace");
+    char* cbStr = createString(func);
+    KDB_DIRECT_RAW_MSG_CALLBACK_FUNC.assign(cbStr);
+    free(cbStr);
+    return ki(SOLCLIENT_OK);
+}
+
 K subscribetopic_solace(K topic, K isBlocking)
 {
     CHECK_SESSION_CREATED;
@@ -948,6 +1033,15 @@ K callbackqueue_solace(K func)
     CHECK_PARAM_STRING_TYPE(func,"callbackqueue_solace");
     char* cbStr = createString(func);
     KDB_QUEUE_MSG_CALLBACK_FUNC.assign(cbStr);
+    free(cbStr);
+    return ki(SOLCLIENT_OK);
+}
+
+K callbackqueueraw_solace(K func)
+{
+    CHECK_PARAM_STRING_TYPE(func,"callbackqueueraw_solace");
+    char* cbStr = createString(func);
+    KDB_QUEUE_RAW_MSG_CALLBACK_FUNC.assign(cbStr);
     free(cbStr);
     return ki(SOLCLIENT_OK);
 }

@@ -140,6 +140,35 @@ EXP K senddirect_solace(K topic, K data);
 EXP K callbacktopic_solace(K cb);
 
 /**
+ * See callbacktopic_solace. This function differs in that the callback function is
+ * provided with a msg pointer, rather than the payload. This msg pointer can be 
+ * pass to subsequent methods to get the payload, based on the type sent in your
+ * infrastructure (e.g. getPayloadAsString, getPayloadAsBinary, etc). This msg pointer
+ * cannot be used outside of the callback function.
+ * @param cb as per callbacktopic_solace
+ */
+EXP K callbacktopicraw_solace(K cb);
+
+/**
+ * Allows q to get the payload of the message as a string (if its of the solace string type)
+ * @param msg The msg provided to the callback function registered with callbacktopicraw_solace
+ * Returns byte array (or long representing the solace error code if the payload wasnt a string)
+ */
+EXP K getPayloadAsXML(K msg);
+/**
+ * Allows q to get the payload of the message as a string (if its of the solace string type)
+ * @param msg The msg provided to the callback function registered with callbacktopicraw_solace
+ * Returns char array (or long representing the solace error code if the payload wasnt a string)
+ */
+EXP K getPayloadAsString(K msg);
+/**
+ * Allows q to get the payload of the message as a byte array (if its of the solace binary type)
+ * @param msg The msg provided to the callback function registered with callbacktopicraw_solace
+ * Returns byte array (or long representing the solace error code if the payload wasnt a string)
+ */
+EXP K getPayloadAsBinary(K msg);
+
+/**
  * Subscribe to a topic 
  *
  * @param topic Should be a string. The Topic to subscribe to
@@ -191,6 +220,16 @@ EXP K sendpersistentrequest_solace(K destType, K dest, K data, K timeout, K repl
  * correlationid is a string. msgid is a long
  */
 EXP K callbackqueue_solace(K cb);
+
+/**
+ * See callbackqueue_solace. This function differs in that the callback function is
+ * provided with a msg pointer, rather than the payload. This msg pointer can be 
+ * pass to subsequent methods to get the payload, based on the type sent in your
+ * infrastructure (e.g. getPayloadAsString, getPayloadAsBinary, etc). This msg pointer
+ * cannot be used outside of the callback function.
+ * @param cb as per callbackqueue_solace
+ */
+EXP K callbackqueueraw_solace(K cb);
 
 /**
  * Subscribes/Binds to an endpoint (e.g. queue). The callback function provided will be called by the API whenever a message is received on the subscription
