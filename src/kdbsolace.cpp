@@ -656,10 +656,12 @@ K init_solace(K options)
         return ki(retCode);
     }
 
-    if (solClient_session_connect ( session_p ) != SOLCLIENT_OK)
+    retCode = solClient_session_connect ( session_p );
+    if (retCode != SOLCLIENT_OK)
     {
         printf("[%ld] Solace session connect error %d: %s\n",THREAD_ID,retCode,solClient_returnCodeToString(retCode));
         solClient_session_destroy (&session_p);
+        session_p = NULL;
         solClient_cleanup();
         return ki(retCode);
     }
@@ -678,15 +680,15 @@ K destroy_solace(K a)
             printf("[%ld] Solace session destroy error %d: %s\n",THREAD_ID,retCode,solClient_returnCodeToString(retCode));
             return ki(retCode);
         }
+        session_p = NULL;
     }
     retCode = solClient_cleanup ();
     if (retCode != SOLCLIENT_OK)
     {
         // can have a return code of SOLCLIENT_FAIL, with various subcodes
-        printf("[%ld] Solace destroy error %d: %s\n",THREAD_ID,retCode,solClient_returnCodeToString(retCode));
+        printf("[%ld] Solace client cleanup error %d: %s\n",THREAD_ID,retCode,solClient_returnCodeToString(retCode));
         return ki(retCode);
     }
-    session_p = NULL;
     return ki(SOLCLIENT_OK); 
 }
 
