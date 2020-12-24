@@ -97,13 +97,12 @@ build]$ cmake --build . --target install
 
 ```bat
 
-> rename solclient_[machine and version].zip solclient.zip
-> mkdir solclient
-> 7z x solclient.zip -osolclient -spe
+> 7z e solclient_[machine and version].tar.gz && 7z x solclient_[machine and version].tar -spe
+> rename solclient-[version] solclient
 > cd solclient
 solclient> set SOLACE_INSTALL_DIR=%cd%
-solclient> cd %QHME%\w64
-w64> MKLINK libsolclient.dll %SOLACE_INSTALL_DIR%\bin\libsolclient.dll
+solclient> cd %QHOME%\w64
+w64> MKLINK libsolclient.dll %SOLACE_INSTALL_DIR%\bin\Win64\libsolclient.dll
 
 ```
 

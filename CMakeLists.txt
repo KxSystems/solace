@@ -9,6 +9,13 @@ project(kdbsolace CXX)
 # Name of shared object
 set(MY_LIBRARY_NAME solacekdb)
 
+# For Windows build default architecture is Win64 
+if(WIN32)
+    if(NOT CMAKE_GENERATOR_PLATFORM)
+        set(CMAKE_GENERATOR_PLATFORM Win64)
+    endif()
+endif()
+
 # Dispay settings
 message(STATUS "Generator : ${CMAKE_GENERATOR}")
 message(STATUS "Generator Platform : ${CMAKE_GENERATOR_PLATFORM}")
@@ -46,18 +53,24 @@ if(MSVC)
     # Windows Visual Studio Win32 or Win64
     # Search Solace C API dependency
     find_library(SOLCLIENT_LIBRARY
-        NAMES solclient libsolclient
-        HINTS "$ENV{SOLACE_INSTALL_DIR}/lib/${CMAKE_GENERATOR_PLATFORM}"
+        REQUIRED
+        NAMES libsolclient
+        HINTS $ENV{SOLACE_INSTALL_DIR}/lib/${CMAKE_GENERATOR_PLATFORM}
     )
     # Get q dependency
-    file(DOWNLOAD "https://github.com/KxSystems/kdb/raw/master/w32/q.lib" "${CMAKE_BINARY_DIR}/q.lib" )
+    if(CMAKE_GENERATOR_PLATFORM MATCHES "Win32")
+        file(DOWNLOAD "https://github.com/KxSystems/kdb/raw/master/w32/q.lib" "${CMAKE_BINARY_DIR}/q.lib" )
+    else()
+        file(DOWNLOAD "https://github.com/KxSystems/kdb/raw/master/w64/q.lib" "${CMAKE_BINARY_DIR}/q.lib" )
+    endif()
     set(LINK_LIBS "${CMAKE_BINARY_DIR}/q.lib")
 else()
     # Linux or MacOSX
     # Search Solace C API dependency
     find_library(SOLCLIENT_LIBRARY
+        REQUIRED
         NAMES solclient libsolclient
-        HINTS "$ENV{SOLACE_INSTALL_DIR}/lib/"
+        HINTS $ENV{SOLACE_INSTALL_DIR}/lib/
     )
     # Additional compile flags
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing")
