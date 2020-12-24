@@ -1,4 +1,4 @@
-\l solace.q
+\l ../q/solace.q
 \c 25 2000
 
 default.host :"host.docker.internal"

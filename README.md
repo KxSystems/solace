@@ -56,14 +56,15 @@ If you have any Solace related questions, you can raise them at [Solace Communit
         # Windows
         > install.bat
 
-    or copy `kdbsolace.so` or `kdbsolace.dll` into `QHOME/[l|m|w]64`
+    or copy `solacekdb.so` or `solacekdb.dll` into `QHOME/[l|m|w]64`
 
 ### Building Interface From Source
 
-### Linux/Mac
+### Linux/MacOSX
 
 1. Download the [Solace C Messaging API](https://solace.com/downloads/?fwp_downloads_types=messaging-apis-and-protocols).
-2. Set `SOLACE_INSTALL_DIR` to the instalation directory of the Solace Messaging C API. This environmental variable will be used to link the library to Solace-kdb+ interface.
+2. Set `SOLACE_INSTALL_DIR` to the instalation directory of the Solace Messaging C API where `include` and `lib` exist. This environmental variable will be used to link the library to Solace-kdb+ interface.
+3. Add `SOLACE_INSTALL_DIR/lib` to `LD_LIBRARY_PATH` (Linux) or `DYLD_LIBRARY_PATH` (MacOSX).
 
 ```bash
 
@@ -74,7 +75,7 @@ solclient]$ export SOLACE_INSTALL_DIR=$(pwd)
 
 ```
 
-3. Clone Solace-kdb+ repository and build with `cmake`.
+4. Clone Solace-kdb+ repository and build with `cmake`.
 
 ```bash
 
@@ -86,23 +87,27 @@ build]$ cmake --build . --target install
 
 ```
 
-**Note:** `cmake --build . --target install` as used in the Linux/MacOS builds installs the required share object and q files to the `QHOME/[ml]64` and `QHOME` directories respectively. If you do not wish to install these files directly, you can execute `cmake --build .` instead of `cmake --build . --target install` and move the files from their build location at `build/solace`.
+**Note:** `cmake --build . --target install` as used in the Linux/MacOS builds installs the required share object and q files to the `QHOME/[ml]64` and `QHOME` directories respectively. If you do not wish to install these files directly, you can execute `cmake --build .` instead of `cmake --build . --target install` and move the files from their build location at `build/kdbsolace`.
 
 ### Windows
 
 1. Download the [Solace C Messaging API](https://solace.com/downloads/?fwp_downloads_types=messaging-apis-and-protocols).
-2. Set `SOLACE_INSTALL_DIR` to the instalation directory of the Solace Messaging C API. This environmental variable will be used to link the library to Solace-kdb+ interface.
+2. Set `SOLACE_INSTALL_DIR` to the installation directory of the Solace Messaging C API where `include` and `lib` exist. This environmental variable will be used to link the library to Solace-kdb+ interface.
+3. Add the `libsolclient.dll` to the kdb+ lib directory e.g. `C:\q\w64` for 64-bit
 
 ```bat
 
+> rename solclient_[machine and version].zip solclient.zip
 > mkdir solclient
-> unzip solclient_[machine and version].zip-C ./solclient --strip-components=1
+> 7z x solclient.zip -osolclient -spe
 > cd solclient
 solclient> set SOLACE_INSTALL_DIR=%cd%
+solclient> cd %QHME%\w64
+w64> MKLINK libsolclient.dll %SOLACE_INSTALL_DIR%\bin\libsolclient.dll
 
 ```
 
-1. Clone Solace-kdb+ repository and build with `cmake`. Building the interface from source requires Visual Studio (Assuming `-G "Visual Studio 15 2017 Win64"` is not necessary).
+4. Clone Solace-kdb+ repository and build with `cmake`. Building the interface from source requires Visual Studio (assuming `-G "Visual Studio 15 2017 Win64"` is not necessary).
 
 ```bat
 
@@ -116,7 +121,7 @@ build> cmake --build . --config Release --target install
 
 **Notes:** 
 
-1. `cmake --build . --config Release --target install` installs the required share object and q files to the `QHOME\w64` and `QHOME` directories respectively. If you do not wish to install these files directly, you can execute `cmake --build . --config Release` instead of `cmake --build . --config Release --target install` and move the files from their build location at `build/solace`.
+1. `cmake --build . --config Release --target install` installs the required share object and q files to the `QHOME\w64` and `QHOME` directories respectively. If you do not wish to install these files directly, you can execute `cmake --build . --config Release` instead of `cmake --build . --config Release --target install` and move the files from their build location at `build/kdbsolace`.
 2. You can use flag `cmake -G "Visual Studio 16 2019" -A Win32` if building 32-bit version.
 
 ## Quick Start
@@ -148,7 +153,7 @@ The subscriber subscribes to a topic `Q` with a wildcard: `Q/>` listening on a p
 ```bash
 
 solace]$ cd examples
-examples]$ q sol_sub_direct.q -host 127.0.0.1:5000 -topic "Q/>"
+examples]$ q sol_sub_direct.q -host 192.168.65.2:55111 -topic "Q/>"
 
 ```
 
