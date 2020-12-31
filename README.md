@@ -19,126 +19,163 @@ You can get started quickly by using free Standard Edition of the Solace [softwa
 
 If you have any Solace related questions, you can raise them at [Solace Community](https://solace.community/).
 
-## Documentation
+## Installation
 
-Documentation outlining the functionality available for this interface can be found [here](https://code.kx.com/q/interfaces/solace).
+### Requirements
 
-## Running
+- kdb+ ≥ 3.5 64-bit (Linux/MacOS/Windows)
+- [Solace Messaging C API](https://solace.com/downloads/)(please select for your relevant machine type).
+- C++11 or later [^1] 
+- CMake ≥ 3.1 [^1]
 
-### Solace PubSub+ Event Broker
+[^1]: Required when building from source
 
-In order to pub/sub with Solace, you'll need to be connected to a [PubSub+ event broker](https://solace.com/products/event-broker/).
+### Installing a release
 
-If you don't already have an event broker running, you can avail of a free standard edition [docker based broker](https://github.com/SolaceLabs/solace-single-docker-compose) or a [free cloud based instance](https://console.solace.cloud/login/new-account) (NOTE: other versions and enterprise solutions are also available).
+1. Ensure [Solace Messaging C API](https://solace.com/downloads/?fwp_downloads_types=messaging-apis-and-protocols) is installed.
+2. Make the Solace library available from kdb+:
+   - Linux: Add the lib directory which includes `include` and `lib` to the `LD_LIBRARY_PATH` environment variable e.g. if unzipped to `/usr/local/solaceapi/`, run:
+        ```bash
 
-### kdb+ Solace Integration
+        $ export LD_LIBRARY_PATH=/usr/local/solaceapi/lib/:$LD_LIBRARY_PATH
+        
+        ```
+   - MacOS: Add the lib directory which includes `include` and `lib`to the `DYLD_LIBRARY_PATH` environment variable e.g. if unzipped to `/Users/jim/solaceapi/`, run:
+        ```bash
 
-#### Download
+        $ export DYLD_LIBRARY_PATH=/Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH
+      
+        ```
+   - Windows: Add the `libsolclient.dll` to the kdb+ lib directory e.g. `C:\q\w64` for 64-bit
+  
+3. Download the latest release of Solace-kdb+ interface from our [releases page](https://github.com/KxSystems/solaceses). To install shared library and q files, use:
 
-Download the latest release from our [releases page](https://github.com/KxSystems/solace/releases)
+        # Linux/MacOS
+        $ ./install.sh
 
-#### Installation
+        # Windows
+        > install.bat
 
-##### Linux
+    or copy `solacekdb.so` or `solacekdb.dll` into `QHOME/[l|m|w]64`
 
-Before installing, install the Solace C API if you have not yet done so:
+### Building Interface From Source
 
-    1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
-    2. Unzip the Solace API to a directory on the machine which the end user can read from.
-    3. Add the lib directory to the `LD_LIBRARY_PATH` environment variable e.g. if unzipped to `/usr/local/solaceapi/`
-       - `export LD_LIBRARY_PATH=/usr/local/solaceapi/lib/:$LD_LIBRARY_PATH`
+### Linux/MacOSX
 
-To install the library and scripts, either
+1. Download the [Solace C Messaging API](https://solace.com/downloads/?fwp_downloads_types=messaging-apis-and-protocols).
+2. Set `SOLACE_INSTALL_DIR` to the instalation directory of the Solace Messaging C API where `include` and `lib` exist. This environmental variable will be used to link the library to Solace-kdb+ interface.
+3. Add `SOLACE_INSTALL_DIR/lib` to `LD_LIBRARY_PATH` (Linux) or `DYLD_LIBRARY_PATH` (MacOSX).
 
-- run the provided install.sh
+```bash
 
-or
+]$ mkdir solclient
+]$ tar xzf solclient_[machine and version].tar.gz -C ./solclient --strip-components=1
+]$ cd solclient
+solclient]$ export SOLACE_INSTALL_DIR=$(pwd)
 
-- copy `kdbsolace.so` which was built or downloaded earlier to your kdb+ folder. If on a Linux 64bit machine with kdb+ installed in `/usr/local/q`, place the shared library into `/usr/local/q/l64/`.
-- the q script to load the solace API (`solace.q`) can be placed in the current working directory or within the kdb+ install directory.
+```
 
+4. Clone Solace-kdb+ repository and build with `cmake`.
 
-See examples and API documentation on how to tailor the interface for your needs.
+```bash
 
-##### Windows
+]$ git clone https://github.com/KxSystems/solace.git
+]$ cd solace
+solace]$ mkdir build && cd build
+build]$ cmake ../
+build]$ cmake --build . --target install
 
-Before installing, install the Solace C API if you have not yet done so:
+```
 
-1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
-2. Unzip the Solace API to a directory on the machine which the end user can read from.
-3. Add the libsolclient.dll lib directory to the kdb lib (directory e.g. C:\q\w64 for 64-bit)
+**Note:** `cmake --build . --target install` as used in the Linux/MacOS builds installs the required share object and q files to the `QHOME/[ml]64` and `QHOME` directories respectively. If you do not wish to install these files directly, you can execute `cmake --build .` instead of `cmake --build . --target install` and move the files from their build location at `build/kdbsolace`.
 
-To install the library and scripts, either
+### Windows
 
-- run the provided install.bat (or install32.bat for 32-bit non-commercial version)
+1. Download the [Solace C Messaging API](https://solace.com/downloads/?fwp_downloads_types=messaging-apis-and-protocols).
+2. Set `SOLACE_INSTALL_DIR` to the installation directory of the Solace Messaging C API where `include` and `lib` exist. This environmental variable will be used to link the library to Solace-kdb+ interface.
+3. Add the `libsolclient.dll` to the kdb+ lib directory e.g. `C:\q\w64` for 64-bit
 
-or
+```bat
 
-- copy `kdbsolace.dll` which was built or downloaded earlier, to your kdb+ install binary dir e.g. if kdb+ installed at `C:\q`, place the shared library into `C:\q\w64\ `for 64-bit version.
-- copy the q script to load the solace API (`solace.q`) can be placed in the current working directory or within the kdb+ install directory.
+> 7z e solclient_[machine and version].tar.gz && 7z x solclient_[machine and version].tar -spe
+> rename solclient-[version] solclient
+> cd solclient
+solclient> set SOLACE_INSTALL_DIR=%cd%
+solclient> cd %QHOME%\w64
+w64> MKLINK libsolclient.dll %SOLACE_INSTALL_DIR%\bin\Win64\libsolclient.dll
 
-See examples and API documentation on how to tailor the interface for your needs.
+```
 
-##### Mac 
+4. Clone Solace-kdb+ repository and build with `cmake`. Building the interface from source requires Visual Studio (assuming `-G "Visual Studio 15 2017 Win64"` is not necessary).
 
-Before installing, install the Solace C API if you have not yet done so:
+```bat
 
-    1. Download Solace C API from [here](https://solace.com/downloads/)(please select for your relevant machine type).
-    2. Unzip the Solace API to a directory on the machine which the end user can read from.
-    3. Add the lib directory to the `DYLD_LIBRARY_PATH` environment variable e.g. if unzipped to `/Users/jim/solaceapi/`
-       - `export DYLD_LIBRARY_PATH=/Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH`
+> git clone https://github.com/KxSystems/solace.git
+> cd solace
+solace> mkdir build && build
+build> cmake --config Release ..
+build> cmake --build . --config Release --target install
 
-To install the library and scripts, either
+```
 
-- run the provided install.sh
+**Notes:** 
 
-or
+1. `cmake --build . --config Release --target install` installs the required share object and q files to the `QHOME\w64` and `QHOME` directories respectively. If you do not wish to install these files directly, you can execute `cmake --build . --config Release` instead of `cmake --build . --config Release --target install` and move the files from their build location at `build/kdbsolace`.
+2. You can use flag `cmake -G "Visual Studio 16 2019" -A Win32` if building 32-bit version.
 
-- Copy `kdbsolace.so` which was built or downloaded earlier, to your kdb+ install binary dir e.g. if kdb+ installed at `/usr/local/q`, place the shared library into `/usr/local/q/m64/`..
-- The q script to load the solace API (`solace.q`) can be placed in the current working directory or within the kdb+ install directory.
+## Quick Start
+
+### Requirements
+
+- [Solace PubSub+ Event Broker](https://solace.com/products/event-broker/)
+
+If you don't already have an event broker running, you can avail of a free standard edition [docker-based broker](https://github.com/SolaceLabs/solace-single-docker-compose) or a [free cloud based instance](https://console.solace.cloud/login/new-account) (other versions and enterprise solutions are also available). In this example we use the docker-based broker.
+
+### Start Event Broker
+
+**Note:** Ensure that docker is running.
+
+```bash
+
+]$ git clone https://github.com/SolaceLabs/solace-single-docker-compose.git
+]$ cd solace-single-docker-compose/template
+template]$ docker-compose -f PubSubStandard_singleNode.yml up -d
+
+```
+
+### Launch Subscriber
+
+A mock subscriber is provided in `examples/` folder of the repository. We assume that you are in the cloned source repository.
+
+The subscriber subscribes to a topic `Q` with a wildcard: `Q/>` listening on a port 5000.
+
+```bash
+
+solace]$ cd examples
+examples]$ q sol_sub_direct.q -host 192.168.65.2:55111 -topic "Q/>"
+
+```
+
+### Launch Publiser
+
+Open another console and launch a publisher to send a message `"hello world"` via topic `Q/1`.
+
+```bash
+
+examples]$ q sol_pub_direct.q -topic "Q/1" -data "hello world"
+
+```
 
 ## Unsupported Functionality
 
 Currently transactional based messaging is unsupported.
 
-## Building Interface From Source
+## Documentation
 
-### Linux/Mac
-
-Building the interface from source requires `gcc`, `gcc c++`, `make` and `cmake` packages installed on your development machine (e.g. xcode for Mac).
-
-Follow these steps:
-
- 1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
- 2. Set an environment variable `BUILD_HOME` to the location of the unzipped Solace C API.
- 3. Run `cmake`
- 4. Run `make install`
-
-
-For example, on Linux/Mac, to create a build within the build directory
-
-```bash
-export BUILD_HOME=/home/myuser/solaceapi/
-cd build
-cmake ../
-make install
-```
-
-You should then find the resulting files in a newly created api dir, which should reside within the build directory.
-
-### Windows
-
-Building the interface from source requires Visual Studio
-
-Follow these steps for Visual Studio 15 (2017) and above:
-
-  1. Download the Solace C Messaging API ( https://solace.com/downloads/ ).
-  2. Set an environment variable `BUILD_HOME` to the location of the unzipped Solace C API.
-  3. Run `cmake -G "Visual Studio 15 2017 Win64"`  (or `cmake "Visual Studio 16 2019" -A Win32` if building 32-bit version)
-
-This will generate a visual studio build package. 
+Documentation outlining the functionality available for this interface can be found [here](https://code.kx.com/q/interfaces/solace).
 
 ## Status
+
 The Solace interface is provided here under an Apache 2.0 license.
 
 If you find issues with the interface or have feature requests please consider raising an issue [here](https://github.com/KxSystems/solace/issues).
