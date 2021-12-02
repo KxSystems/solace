@@ -103,7 +103,7 @@ solace]$ cd examples
 examples]$ q sol_sub_direct.q -host tcp://192.168.65.2:55111 -topic "Q/>"
 ```
 
-#### Launch Publiser
+#### Launch Publisher
 
 Open another console and launch a publisher to send a message `"hello world"` via topic `Q/1`.
 
