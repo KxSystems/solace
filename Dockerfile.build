@@ -10,7 +10,7 @@ RUN yum -y install gcc && \
 RUN yum clean all
 
 RUN mkdir -p /source/api/ /source/code/ && cd /source/api && wget https://products.solace.com/download/C_API_LINUX64 && tar xvf C_API_LINUX64 --strip-components=1 && rm C_API_LINUX64
-ENV BUILD_HOME /source/api/
+ENV SOLACE_INSTALL_DIR /source/api/
 WORKDIR /source/code/
 
 CMD ["/bin/bash"]

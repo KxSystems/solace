@@ -49,10 +49,11 @@ q sol_capabilities.q -opt SESSION_CAPABILITY_ENDPOINT_MANAGEMENT
 
 Params:
 
-- `-host` - Broker hostname
+- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
 - `-vpn` - VPN name
 - `-user` - username
 - `-pass` - password
+- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
 - `-opt` - Solace capability name (possible values listed [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#sessioncapabilities))
 
 ### Endpoint Interaction
@@ -69,10 +70,11 @@ q sol_endpoint_create.q -name "Q/test"
 
 Params:
 
-- `-host` - Broker hostname
+- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
 - `-vpn` - VPN name
 - `-user` - username
 - `-pass` - password
+- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
 - `-name` - name of the endpoint to be created
 
 #### sol_endpoint_destroy.q
@@ -87,10 +89,11 @@ q sol_endpoint_destroy.q -name "Q/test"
 
 Params:
 
-- `-host` - Broker hostname
+- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
 - `-vpn` - VPN name
 - `-user` - username
 - `-pass` - password
+- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
 - `-name` - name of the endpoint to be created
 
 #### sol_topic_to_queue_mapping.q
@@ -105,10 +108,11 @@ q sol_topic_to_queue_mapping.q -queue "Q/test" -topic "Q/topic"
 
 Params:
 
-- `-host` - Broker hostname
+- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
 - `-vpn` - VPN name
 - `-user` - username
 - `-pass` - password
+- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
 - `-queue` - name of the exiting queue endpoint to alter
 - `-topic` - name of the topic to add to the existing queue
 
@@ -126,10 +130,11 @@ q sol_pub_direct.q -topic "Q/1" -data "hello world"
 
 Params:
 
-- `-host` - Broker hostname
+- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
 - `-vpn` - VPN name
 - `-user` - username
 - `-pass` - password
+- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
 - `-topic` - topic name to publish the message to
 - `-data` - message payload to send
 
@@ -145,10 +150,11 @@ q sol_sub_direct.q -host 192.168.65.2:55111 -topic "Q/>"
 
 Params:
 
-- `-host` - Broker hostname
+- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
 - `-vpn` - VPN name
 - `-user` - username
 - `-pass` - password
+- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
 - `-topic` - topic name to subscribe to (Solace wildcard format supported)
 
 #### sol_pub_directrequestor.q
@@ -173,10 +179,11 @@ q sol_pub_persist.q -dtype "queue" -dest "Q/1" -data "hello world"  -correlation
 
 Params:
 
-- `-host` - Broker hostname
+- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
 - `-vpn` - VPN name
 - `-user` - username
 - `-pass` - password
+- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
 - `-data` - message payload to send
 - `-dtype` - (optional) type of the destination (can be 'queue' or 'topic'), defaults to queue
 - `-dest` - (optional) name of the endpoint to be created
@@ -194,8 +201,9 @@ q sol_sub_persist.q -dest "Q/1"
 
 Params:
 
-- `-host` - Broker hostname
+- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
 - `-vpn` - VPN name
 - `-user` - username
 - `-pass` - password
+- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
 - `-dest` - (optional) name of the endpoint queue to be used
