@@ -3,13 +3,14 @@
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/kxsystems/solace?include_prereleases)](https://github.com/kxsystems/solace/releases) [![Travis (.org) branch](https://img.shields.io/travis/kxsystems/solace/master?label=travis%20build)](https://travis-ci.org/kxsystems/solace/branches)
 
-## Introduction
+A KX [Fusion interface](https://code.kx.com/q/interfaces#fusion)
+
 
 This interface provides a mechanism for Solace PubSub+ brokers to interact with kdb+. The interface is a thin wrapper around the Solace C api documented [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/index.html)
 
 ## New to kdb+ ?
 
-Kdb+ is the world's fastest time-series database, optimized for ingesting, analyzing and storing massive amounts of structured data. To get started with kdb+, please visit https://code.kx.com/q/learn/ for downloads and developer information. For general information, visit https://kx.com/
+Kdb+ is the world's fastest timeseries database, optimized for ingesting, analyzing and storing massive amounts of structured data. To get started with kdb+, please visit https://code.kx.com/q/learn/ for downloads and developer information. For general information, visit https://kx.com/
 
 ## New to Solace PubSub+ ?
 
@@ -17,44 +18,53 @@ Solace PubSub+ Event Broker efficiently streams events and information across cl
 
 You can get started quickly by using free Standard Edition of the Solace [software broker](https://solace.com/products/event-broker/software/) or spin up a free instance on [Solace Cloud](https://console.solace.cloud/login/new-account).
 
-If you have any Solace related questions, you can raise them at [Solace Community](https://solace.community/).
+If you have any Solace-related questions, you can raise them at [Solace Community](https://solace.community/).
 
 ## Installation
 
 ### Requirements
 
-- kdb+ ≥ 3.5 64-bit (Linux/MacOS/Windows)
-- [Solace Messaging C API](https://solace.com/downloads/)(please select for your relevant machine type).
+- kdb+ ≥ 3.5 64-bit (Linux/macOS/Windows)
+- [Solace Messaging C API](https://solace.com/downloads/) (select for your relevant machine type).
 
 ### Installing a release
 
-1. Ensure [Solace Messaging C API](https://solace.com/downloads/?fwp_downloads_types=messaging-apis-and-protocols) is installed.
-2. Make the Solace library available from kdb+:
-   - Linux: Add the lib directory which includes `include` and `lib` to the `LD_LIBRARY_PATH` environment variable e.g. if unzipped to `/usr/local/solaceapi/`, run:
+1.  Ensure [Solace Messaging C API](https://solace.com/downloads/?fwp_downloads_types=messaging-apis-and-protocols) is installed.
+
+2.  Make the Solace library available from kdb+:
+
+    -   Linux: Add the lib directory which includes `include` and `lib` to the `LD_LIBRARY_PATH` environment variable e.g. if unzipped to `/usr/local/solaceapi/`, run:
+
         ```bash
-        $ export LD_LIBRARY_PATH=/usr/local/solaceapi/lib/:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=/usr/local/solaceapi/lib/:$LD_LIBRARY_PATH
         ```
-   - MacOS: Add the lib directory which includes `include` and `lib`to the `DYLD_LIBRARY_PATH` environment variable e.g. if unzipped to `/Users/jim/solaceapi/`, run:
-        ```bash
-        $ export DYLD_LIBRARY_PATH=/Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH
-        ```
-   - Windows: Add the `libsolclient.dll` to the kdb+ lib directory e.g. `C:\q\w64` for 64-bit
+    -   macOS: Add the lib directory which includes `include` and `lib`to the `DYLD_LIBRARY_PATH` environment variable e.g. if unzipped to `/Users/jim/solaceapi/`, run:
+
+       ```bash
+       export DYLD_LIBRARY_PATH=/Users/jim/solaceapi/lib/:$DYLD_LIBRARY_PATH
+       ```
+
+    -   Windows: Add the `libsolclient.dll` to the kdb+ lib directory e.g. `C:\q\w64` for 64-bit
   
-3. Download the latest release of Solace-kdb+ interface from our [releases page](https://github.com/KxSystems/solaceses). To install shared library and q files, use:
+3.  Download the latest release of Solace-kdb+ interface from our [releases page](https://github.com/KxSystems/solaceses). To install shared library and q files, use:
 
         # Linux/MacOS
-        $ ./install.sh
+        ./install.sh
         
         # Windows
-        > install.bat
+        install.bat
 
     or copy `solacekdb.so` or `solacekdb.dll` into `QHOME/[l|m|w]64`
 
+
 ## Documentation
 
-Documentation outlining the functionality available for this interface can be found [here](https://code.kx.com/q/interfaces/solace).
+[Overview](docs/README.md)
+[Reference](docs/reference.md)
+[RESTful API](docs/solacerest.md)
+[Examples](examples/README.md)
 
-## Quick Start
+## Quick start
 
 If you don't already have an event broker running, you can avail of a free standard edition [docker-based broker](https://github.com/SolaceLabs/solace-single-docker-compose) or a [free cloud based instance](https://console.solace.cloud/login/new-account) (other versions and enterprise solutions are also available). 
 
@@ -111,11 +121,11 @@ Open another console and launch a publisher to send a message `"hello world"` vi
 examples]$ q sol_pub_direct.q -host tcp://192.168.65.2:55111 -topic "Q/1" -data "hello world"
 ```
 
-## Unsupported Functionality
+## Unsupported functionality
 
 Currently transactional based messaging is unsupported.
 
-## Building Interface From Source
+## Building interface from source
 
 ### Requirements
 

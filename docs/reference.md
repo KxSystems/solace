@@ -1,64 +1,52 @@
----
-title: Solace function reference | Interfaces Documentation for kdb+ and q
-author: Conor McCarthy
-description: List all functionality and options for the kdb+ interface to Solace
-date: April 2020
-keywords: solace, interface, fusion , q
----
 # Solace function reference
 
-:fontawesome-brands-github:
-[KxSystems/solace](https://github.com/KxSystems/solace)
+`.solace.`   **Solace interface**
 
-<div markdown="1" class="typewriter">
-.solace.   **Solace interface**
+Event notifications<br>
+[`setSessionCallback`](#solacesetsessioncallback)         Set a callback function for session events<br>
+[`setFlowCallback`](#solacesetflowcallback)            Set a callback function for flow events
 
-Event notifications
-  [setSessionCallback](#solacesetsessioncallback)         Set a callback function for session events
-  [setFlowCallback](#solacesetflowcallback)            Set a callback function for flow events
+Connect-disconnect<br>
+[`init`](#solaceinit)                       Connect to and create a session<br>
+[`destroy`](#solacedestroy)                    Destroy a previously created session
 
-Connect-disconnect
-  [init](#solaceinit)                       Connect to and create a session
-  [destroy](#solacedestroy)                    Destroy a previously created session
+Endpoint management<br>
+[`createEndpoint`](#solacecreateendpoint)             Create an endpoint from a session<br>
+[`destroyEndpoint`](#solacedestroyendpoint)            Destroy an endpoint from a session<br>
+[`endpointTopicSubscribe`](#solaceendpointtopicsubscribe)     Add a topic subscription to an existing endpoint<br>
+[`endpointTopicUnsubscribe`](#solaceendpointtopicunsubscribe)   Unsubscribe from a topic on an endpoint
 
-Endpoint management
-  [createEndpoint](#solacecreateendpoint)             Create an endpoint from a session
-  [destroyEndpoint](#solacedestroyendpoint)            Destroy an endpoint from a session
-  [endpointTopicSubscribe](#solaceendpointtopicsubscribe)     Add a topic subscription to an existing endpoint
-  [endpointTopicUnsubscribe](#solaceendpointtopicunsubscribe)   Unsubscribe from a topic on an endpoint
+Direct messaging<br>
+[`sendDirect`](#solacesenddirect)                 Send a direct message<br>
+[`sendDirectRequest`](#solacesenddirectrequest)          Send a direct message requiring a sync response
 
-Direct messaging
-  [sendDirect](#solacesenddirect)                 Send a direct message
-  [sendDirectRequest](#solacesenddirectrequest)          Send a direct message requiring a sync response
+Topic subscription<br>
+[`setTopicMsgCallback`](#solacesettopicmsgcallback)        Set callback for messages from topic subscriptions<br>
+[`setTopicRawMsgCallback`](#solacesettopicrawmsgcallback)     Set callback for messages from topic subscriptions<br>
+[`subscribeTopic`](#solacesubscribetopic)             Subscribe to a topic<br>
+[`unSubscribeTopic`](#solaceunsubscribetopic)           Unsubscribe from a topic
 
-Topic subscription
-  [setTopicMsgCallback](#solacesettopicmsgcallback)        Set callback for messages from topic subscriptions
-  [setTopicRawMsgCallback](#solacesettopicrawmsgcallback)     Set callback for messages from topic subscriptions
-  [subscribeTopic](#solacesubscribetopic)             Subscribe to a topic
-  [unSubscribeTopic](#solaceunsubscribetopic)           Unsubscribe from a topic
+Guaranteed/persistent messaging<br>
+[`sendPersistent`](#solacesendpersistent)             Send a persistent message onto a queue or topic<br>
+[`sendPersistentRequest`](#solacesendpersistentrequest)      Send a guaranteed message for a synchronous reply
 
-Guaranteed/persistent messaging
-  [sendPersistent](#solacesendpersistent)             Send a persistent message onto a queue or topic
-  [sendPersistentRequest](#solacesendpersistentrequest)      Send a guaranteed message for a synchronous reply
+Flow bindings<br>
+[`setQueueMsgCallback`](#solacesetqueuemsgcallback)        Set callback for when message sent to an endpoint<br>
+[`setQueueRawMsgCallback`](#solacesetqueuerawmsgcallback)     Set callback for when message sent to an endpoint<br>
+[`bindQueue`](#solacebindqueue)                  Bind to a queue<br>
+[`sendAck`](#solacesendack)                    Acknowledge processing of a message<br>
+[`unBindQueue`](#solaceunbindqueue)                Remove subscription/binding created with bindQueue
 
-Flow bindings
-  [setQueueMsgCallback](#solacesetqueuemsgcallback)        Set callback for when message sent to an endpoint
-  [setQueueRawMsgCallback](#solacesetqueuerawmsgcallback)     Set callback for when message sent to an endpoint
-  [bindQueue](#solacebindqueue)                  Bind to a queue
-  [sendAck](#solacesendack)                    Acknowledge processing of a message
-  [unBindQueue](#solaceunbindqueue)                Remove subscription/binding created with bindQueue
+Message functions<br>
+[`getPayloadAsBinary`](#solacegetpayloadasbinary)         Get the binary part of the Solace message<br>
+[`getPayloadAsString`](#solacegetpayloadasstring)         Get the string part of the Solace message<br>
+[`getPayloadAsXML`](#solacegetpayloadasxml)            Get the XML part of the Solace message
 
-Message functions
-  [getPayloadAsBinary](#solacegetpayloadasbinary)         Get the binary part of the Solace message
-  [getPayloadAsString](#solacegetpayloadasstring)         Get the string part of the Solace message
-  [getPayloadAsXML](#solacegetpayloadasxml)            Get the XML part of the Solace message
+Utility functions<br>
+[`getCapability`](#solacegetcapability)              Value of the specified capability for the session<br>
+[`version`](#solaceversion)                    Current version of the build/deployment
 
-Utility functions
-  [getCapability](#solacegetcapability)              Value of the specified capability for the session
-  [version](#solaceversion)                    Current version of the build/deployment
-</div>
-
-
+---
 
 ## Event notifications
 
@@ -67,7 +55,7 @@ Utility functions
 
 _Associate the provided function with session events_
 
-```syntax
+```txt
 .solace.setSessionCallback callbackFunction
 ```
 
@@ -83,7 +71,7 @@ associates the named function with session events, such as connection notificati
 
 _Associate the provided function with flow events_
 
-```syntax
+```txt
 .solace.setFlowCallback callbackFunction
 ```
 
@@ -102,7 +90,7 @@ Where `callbackFunction` is a symbol denoting a function in your q session with 
 
 _Connect to and create a session_
 
-```syntax
+```txt
 .solace.init options
 ```
 
@@ -110,13 +98,13 @@ Where `options` is a symbol-to-symbol dictionary mapping Solace [properties](htt
 
 Common properties are `SESSION_HOST`,  `SESSION_VPN_NAME`, `SESSION_USERNAME`, `SESSION_PASSWORD`, `SESSION_RECONNECT_RETRIES` and `SESSION_SSL_TRUST_STORE_DIR`.
 
-!!! tip "You must be connected before running any subsequent Solace functions."
+:warning: You must be connected before running any subsequent Solace functions.
 
 ### `.solace.destroy`
 
 _Destroy a session_
 
-```syntax
+```txt
 .solace.destroy[]
 ```
 Destroys the current session.
@@ -128,12 +116,12 @@ Destroys the current session.
 Endpoint-management functions may be used to create or destroy endpoints from the kdb+ session.
 In some deployments, endpoints may already be created for you by an admin.
 
-!!! tip "Endpoint management must be enabled for the user in order to use this functionality"
+:warning: Endpoint management must be enabled for the user in order to use this functionality
 
 
 ### `.solace.createEndpoint`
 
-```syntax
+```txt
 .solace.createEndpoint[options;provFlags]
 ```
 
@@ -151,7 +139,7 @@ provisions an endpoint on the appliance from the session.
 
 _Destroy an endpoint_
 
-```syntax
+```txt
 .solace.destroyEndpoint[options;provFlags]
 ```
 
@@ -167,7 +155,7 @@ destroys an endpoint from the session.
 
 _Add a topic subscription to an existing endpoint_
 
-```syntax
+```txt
 .solace.endpointTopicSubscribe[options;provFlags;topic]
 ```
 
@@ -177,14 +165,14 @@ Where
 -   `provFlags` is the [provision flag](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#provisionflags) used by Solace (integer)
 -   `topic` is a topic subscription (symbol or string)
 
-!!! tip "Topic subscriptions can be added to queues or remote clients."
+:bulb: Topic subscriptions can be added to queues or remote clients.
 
 
 ### `.solace.endpointTopicUnsubscribe`
 
 _Unsubscribe from a topic on an endpoint_
 
-```syntax
+```txt
 .solace.endpointTopicUnsubscribe[options;provFlags;topic]
 ```
 
@@ -194,7 +182,7 @@ Where
 -   `provFlags` is the [provision flag](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#provisionflags) used by Solace (integer)
 -   `topic` is a topic subscription (symbol or string)
 
-!!! tip "Un-subscriptions from topics may be from either queues or remote clients."
+:bulb: Un-subscriptions from topics may be from either queues or remote clients.
 
 
 ## Direct messaging
@@ -204,7 +192,7 @@ Where
 
 _Send a direct message_
 
-```syntax
+```txt
 .solace.sendDirect[topic;data]
 ```
 
@@ -213,7 +201,7 @@ Where
 -  `topic` is the topic to which the message is sent (string)
 -  `data` is the message payload (string, symbol or byte array)
 
-:fontawesome-solid-globe:
+:globe_with_meridians:
 [Solace direct messages](https://docs.solace.com/PubSub-Basics/Direct-Messages.htm)
 
 Each message will automatically be populated with message-eliding eligibility enabled and dead message queue (DMQ) eligibility enabled.
@@ -223,7 +211,7 @@ Each message will automatically be populated with message-eliding eligibility en
 
 _Send a direct message which requires a sync reply_
 
-```syntax
+```txt
 .solace.sendDirectRequest[topic;data;timeout;replyType;replyDest]
 ```
 
@@ -255,7 +243,7 @@ For example, if the result is 7, the reply wasn’t received.
 
 _Set callback for messages received from topic subscriptions_
 
-```syntax
+```txt
 .solace.setTopicMsgCallback callbackFunction
 ```
 Where `callbackFunction` is <!-- FIXME name of? --> a q function with arguments:
@@ -280,7 +268,7 @@ If the dictionary value for `isRequest` is true, the function should return with
 _Set callback for messages received from topic subscriptions_
 
 
-```syntax
+```txt
 .solace.setTopicRawMsgCallback callbackFunction
 ```
 
@@ -307,7 +295,7 @@ This is an alternative to `.solace.setTopicMsgCallback`.
 
 _Subscribe to a topic_
 
-```syntax
+```txt
 .solace.subscribeTopic[topic;isBlocking]
 ```
 
@@ -325,7 +313,7 @@ If `isBlocking` is true then block until confirm or true to get session event ca
 
 _Unsubscribe from a topic_
 
-```syntax
+```txt
 .solace.unSubscribeTopic topic
 ```
 
@@ -343,7 +331,7 @@ Where `topic` is a string denoting a topic, unsubscribes from it.
 
 _Send a persistent message onto a queue or topic_
 
-```syntax
+```txt
 .solace.sendPersistent[destType;dest;data;correlationId]
 ```
 
@@ -363,7 +351,7 @@ correlationId  | symbol                  | a Correlation ID to be carried in the
 
 _Send a guaranteed message requiring a synchronous reply_
 
-```syntax
+```txt
 .solace.sendPersistentRequest[destType;dest;data;timeout;replyType;replydest]
 ```
 
@@ -392,7 +380,7 @@ For example, if the result is 7, the reply was not received.
 
 _Set a callback function for when a message is sent to an endpoint_
 
-```syntax
+```txt
 .solace.setQueueMsgCallback callbackFunction
 ```
 
@@ -416,7 +404,7 @@ Where `callbackFunction` is <!-- FIXME name of? --> a q function with arguments:
 
 _Set a callback function for when a message is sent to an endpoint_
 
-```syntax
+```txt
 .solace.setQueueRawMsgCallback callbackFunction
 ```
 
@@ -441,7 +429,7 @@ This is an alternative to `.solace.setQueueMsgCallback`.
 
 _Bind to a queue_
 
-```syntax
+```txt
 .solace.bindQueue bindProps
 ```
 
@@ -452,7 +440,7 @@ Where `bindProps` is a symbol-to-symbol dictionary mapping the [Solace bind prop
 
 _Acknowledge processing of a message_
 
-```syntax
+```txt
 .solace.sendAck[endpointname;msgid]
 ```
 
@@ -472,7 +460,7 @@ This is only required when you wish to take control and run with auto acks off (
 
 _Remove a subscription/binding_
 
-```syntax
+```txt
 .solace.unBindQueue endpointname
 ```
 
@@ -491,7 +479,7 @@ removes a subscription or binding created via `.solace.bindQueue`.
 
 _Get binary part of a Solace message_
 
-```syntax
+```txt
 .solace.getPayloadAsBinary msg
 ```
 
@@ -508,7 +496,7 @@ This API defaults to sending messages as binary (of which string/XML/etc can be 
 
 _Get string part of a Solace message_
 
-```syntax
+```txt
 .solace.getPayloadAsString msg
 ```
 
@@ -526,7 +514,7 @@ This corresponds to the Solace sender setting the payload using the Solace funct
 
 _Get XML part of a Solace message_
 
-```syntax
+```txt
 .solace.getPayloadAsXML msg
 ```
 
@@ -547,7 +535,7 @@ This corresponds to the Solace sender setting the payload using the Solace funct
 
 _Retrieve the value of the specified capability for the session_
 
-```syntax
+```txt
 .solace.getCapability capabilityName
 ```
 
@@ -560,7 +548,7 @@ The returned value type will vary depending on the capability requested.
 
 _Current version of the build/deployment_
 
-```syntax
+```txt
 .solace.version[]
 ```
 
