@@ -1,209 +1,190 @@
-
-# kdb+ interface for Solace (Examples)
+# kdb+ interface for Solace (examples)
 
 ## Installation
 
-Follow the installation steps from main README.md.
+Follow the [installation steps](../README.md).
 
-Note, as per the installation steps, that `script/solace.q` should be placed in the examples directory or in the KDB+ installation directory.
+Note, as per the installation steps, that `script/solace.q` should be placed in the `examples` directory or in the kdb+ installation directory specified in `QHOME`.
 
-## Running Examples
+## Command-line options
 
-- [Utilities](#utilities)
-  * [sol_version.q](#sol_versionq)
-  * [sol_capabilities.q](#sol_capabilitiesq)
-- [Endpoint Interaction](#endpoint_interaction)
-  * [sol_endpoint_create.q](#sol_endpoint_createq)
-  * [sol_endpoint_destroy.q](#sol_endpoint_destroyq)
-  * [sol_topic_to_queue_mapping.q](#sol_topic_to_queue_mappingq)
-- [Pub/Sub With Direct Messages](#pub_sub_with_direct_messages)
-  * [sol_pub_direct.q](#sol_pub_directq)
-  * [sol_sub_direct.q](#sol_sub_directq)
-  * [sol_pub_directrequestor.q](#sol_pub_directrequestorq)
-  * [sol_sub_directreplier.q](#sol_sub_directreplierq)
-- [Pub/Sub With Guaranteed Messages](#pub_sub_with_guaranteed_messages)
-  * [sol_pub_persist.q](#sol_pub_persistq)
-  * [sol_sub_persist.q](#sol_sub_persistq)
+option  | value
+--------|------
+`corr`  | correlation ID
+`data`  | message payload to send
+`dest`  | name of the endpoint queue
+`dtype` | type of the destination (can be `queue` or `topic`), defaults to `queue`
+`host`  | SMF (Secured) Host to connect to (e.g. `tcp://service.solace.cloud:5555`)
+`name`  | name of the endpoint to be created
+`opt`   | Solace capability name ([possible values](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#sessioncapabilities))
+`pass`  | password
+`queue` | name of the exiting queue endpoint to alter
+`topic` | topic name
+`trust` | SSL trust store directory containing `.pem` file (when using a Secured SMF Host)
+`user`  | username
+`vpn`   | VPN name
+
+## Running examples
+
+[Utilities](#utilities)<br>
+[`sol_version.q`](#sol_versionq)<br>
+[`sol_capabilities.q`](#sol_capabilitiesq)
+
+[Endpoint Interaction](#endpoint_interaction)<br>
+[`sol_endpoint_create.q`](#sol_endpoint_createq)<br>
+[`sol_endpoint_destroy.q`](#sol_endpoint_destroyq)<br>
+[`sol_topic_to_queue_mapping.q`](#sol_topic_to_queue_mappingq)
+
+[Pub/Sub With Direct Messages](#pub_sub_with_direct_messages)<br>
+[`sol_pub_direct.q`](#sol_pub_directq)<br>
+[`sol_sub_direct.q`](#sol_sub_directq)<br>
+[`sol_pub_directrequestor.q`](#sol_pub_directrequestorq)<br>
+[`sol_sub_directreplier.q`](#sol_sub_directreplierq)
+
+[Pub/Sub With Guaranteed Messages](#pub_sub_with_guaranteed_messages)<br>
+[`sol_pub_persist.q`](#sol_pub_persistq)<br>
+[`sol_sub_persist.q`](#sol_sub_persistq)
 
 ### Utilities
 
-#### sol_version.q
+#### `sol_version.q`
 
 Prints the Solace API version currently in use.
 
 Example:
 
-```
+```bash
 q sol_version.q
 ```
 
-#### sol_capabilities.q
+#### `sol_capabilities.q`
 
 Requests capability value settings from the Solace broker
 
 Example (whether endpoint creation/deletion is allowed by user)
 
-```C
+```bash
 q sol_capabilities.q -opt SESSION_CAPABILITY_ENDPOINT_MANAGEMENT
 ```
 
-Params:
+[Command-line options](#command-line-options): `host` `vpn` `user` `pass` `trust` `opt`
 
-- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
-- `-vpn` - VPN name
-- `-user` - username
-- `-pass` - password
-- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
-- `-opt` - Solace capability name (possible values listed [here](https://docs.solace.com/API-Developer-Online-Ref-Documentation/c/sol_client_8h.html#sessioncapabilities))
 
-### Endpoint Interaction
+### Endpoint interaction
 
 Creates a queue on the Solace PubSub+ broker (permission permitting)
 
-#### sol_endpoint_create.q
+#### `sol_endpoint_create.q`
 
 Example:
 
-```C
+```bash
 q sol_endpoint_create.q -name "Q/test"
 ```
 
-Params:
+[Command-line options](#command-line-options): `host` `vpn` `user` `pass` `trust` `name`
 
-- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
-- `-vpn` - VPN name
-- `-user` - username
-- `-pass` - password
-- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
-- `-name` - name of the endpoint to be created
 
-#### sol_endpoint_destroy.q
+#### `sol_endpoint_destroy.q`
 
 Removes a previously created endpoint on the Solace broker (permission permitting)
 
 Example:
 
-```C
+```bash
 q sol_endpoint_destroy.q -name "Q/test"
 ```
 
-Params:
+[Command-line options](#command-line-options): `host` `vpn` `user` `pass` `trust` `name`
 
-- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
-- `-vpn` - VPN name
-- `-user` - username
-- `-pass` - password
-- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
-- `-name` - name of the endpoint to be created
+The `name` option is name of the endpoint to be destroyed.
 
-#### sol_topic_to_queue_mapping.q
+
+#### `sol_topic_to_queue_mapping.q`
 
 Add a topic subscription to an existing endpoint queue (permission permitting)
 
 Example:
 
-```C
+```bash
 q sol_topic_to_queue_mapping.q -queue "Q/test" -topic "Q/topic"
 ```
 
-Params:
+[Command-line options](#command-line-options): `host` `vpn` `user` `pass` `trust` `queue` `topic`
 
-- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
-- `-vpn` - VPN name
-- `-user` - username
-- `-pass` - password
-- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
-- `-queue` - name of the exiting queue endpoint to alter
-- `-topic` - name of the topic to add to the existing queue
+- `-queue` is the name of the exiting queue endpoint to alter
+- `-topic` is the name of the topic to add to the existing queue
 
-### Pub/Sub With Direct Messages
+### Pub/Sub with direct messages
 
-#### sol_pub_direct.q
+#### `sol_pub_direct.q`
 
 Sends a direct message via a topic (also has an example of using session properties to enable send timestamps on each msg). Can be used with `sol_sub_direct.q` example or any solace example program.
 
 Example:
 
-```c
+```bash
 q sol_pub_direct.q -topic "Q/1" -data "hello world"
 ```
 
-Params:
+[Command-line options](#command-line-options): `host` `vpn` `user` `pass` `trust` `topic` `data`
 
-- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
-- `-vpn` - VPN name
-- `-user` - username
-- `-pass` - password
-- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
-- `-topic` - topic name to publish the message to
-- `-data` - message payload to send
+- `-topic` is the topic name to publish the message to
+- `-data` is the message payload to send
 
-#### sol_sub_direct.q
+
+#### `sol_sub_direct.q`
 
 Subscribes to a topic for direct messages.
 
 Example:
 
-```c
+```bash
 q sol_sub_direct.q -host 192.168.65.2:55111 -topic "Q/>"
 ```
 
-Params:
+[Command-line options](#command-line-options): `host` `vpn` `user` `pass` `trust` `topic`
 
-- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
-- `-vpn` - VPN name
-- `-user` - username
-- `-pass` - password
-- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
-- `-topic` - topic name to subscribe to (Solace wildcard format supported)
+`-topic` is the topic name to subscribe to (Solace wildcard format supported)
 
-#### sol_pub_directrequestor.q
+
+#### `sol_pub_directrequestor.q`
 
 Similar to `sol_pub_direct.q`, but adds a request for a reply as part of the published message. Can be used with `sol_sub_directreplier.q`
 
-#### sol_sub_directreplier.q
+
+#### `sol_sub_directreplier.q`
 
 Similar to `sol_sub_direct.q`, but replies to any message received
 
-### Pub/Sub With Guaranteed Messages
 
-#### sol_pub_persist.q
+### Pub/Sub with guaranteed messages
+
+#### `sol_pub_persist.q`
 
 Sends a persistent/guaranteed message to an existing endpoint (see `sol_endpoint_create.q`)
 
 Example:
 
-```c
+```bash
 q sol_pub_persist.q -dtype "queue" -dest "Q/1" -data "hello world"  -correlationid 555
 ```
 
-Params:
+[Command-line options](#command-line-options): `host` `vpn` `user` `pass` `trust` `data` [`dtype`] [`dest`] [`corr`]
 
-- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
-- `-vpn` - VPN name
-- `-user` - username
-- `-pass` - password
-- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
-- `-data` - message payload to send
-- `-dtype` - (optional) type of the destination (can be 'queue' or 'topic'), defaults to queue
-- `-dest` - (optional) name of the endpoint to be created
-- `-corr` - (optional) correlation id
+`-dest`(optional) is yje name of the endpoint to be created
 
-#### sol_sub_persist.q
+
+#### `sol_sub_persist.q`
 
 Subscribes, while printing and acknowledging each message
 
 Example:
 
-```C
+```bash
 q sol_sub_persist.q -dest "Q/1"
 ```
 
-Params:
+[Command-line options](#command-line-options): `host` `vpn` `user` `pass` `trust` [`dest`]
 
-- `-host` - SMF (Secured) Host to connect to (e.g. tcp://service.solace.cloud:5555)
-- `-vpn` - VPN name
-- `-user` - username
-- `-pass` - password
-- '-trust' - SSL trust store directory containing .pem file (when using a Secured SMF Host)
-- `-dest` - (optional) name of the endpoint queue to be used
+`-dest` (optional) is the name of the endpoint queue to be used
