@@ -24,7 +24,7 @@
 
     -   Windows: Add the `libsolclient.dll` to the kdb+ lib directory e.g. `C:\q\w64` for 64-bit
   
-3.  Download the latest release of Solace-kdb+ interface from our [releases page](https://github.com/KxSystems/solaceses). To install shared library and q files, use:
+3.  Download the latest release of Solace-kdb+ interface from our [releases page](https://github.com/KxSystems/solace/releases). To install shared library and q files, use:
 
         # Linux/MacOS
         ./install.sh
