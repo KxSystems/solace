@@ -22,7 +22,7 @@ You can get started quickly by using free Standard Edition of the Solace [softwa
 
 If you have any Solace-related questions, you can raise them at [Solace Community](https://solace.community/).
 
-### Uses cases
+### Use cases
 
 The event broker is used across a number of sectors including
 
