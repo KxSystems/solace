@@ -6,8 +6,6 @@ jobs:
   - dist: bionic
     os: linux
     env: ARCH="x64"
-  - os: osx
-    env: ARCH="x64"
   - os: windows
     env: ARCH="x64"
   - os: windows
