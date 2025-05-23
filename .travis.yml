@@ -3,13 +3,36 @@ jobs:
   - dist: xenial
     os: linux
     env: ARCH="x64"
+    deploy:
+    - provider: releases
+      token: "$GITHUB_APIKEY"
+      file: "$FILE_NAME"
+      cleanup: true
+      on:
+        tags: true
   - dist: bionic
     os: linux
     env: ARCH="x64"
   - os: windows
     env: ARCH="x64"
+    deploy:
+    - provider: releases
+      token: "$GITHUB_APIKEY"
+      file: "$FILE_NAME"
+      skip_cleanup: true
+      dpl_version: 2.0.3.beta.4
+      on:
+        tags: true
   - os: windows
     env: ARCH="x86"
+    deploy:
+    - provider: releases
+      token: "$GITHUB_APIKEY"
+      file: "$FILE_NAME"
+      skip_cleanup: true
+      dpl_version: 2.0.3.beta.4
+      on:
+        tags: true
 language: c
 compiler: gcc
 os: linux
@@ -98,13 +121,3 @@ script:
     elif [[ $TRAVIS_OS_NAME == "linux" || $TRAVIS_OS_NAME == "osx" ]]; then
       tar  -zcvf $FILE_NAME README.md install.sh LICENSE q examples docs;
     fi
-
-deploy:
-  provider: releases
-  token: "$GITHUB_APIKEY"
-  file: "$FILE_NAME"
-  skip_cleanup: true
-  dpl_version: 2.0.3.beta.4
-  on:
-    tags: true
-    condition: $TRAVIS_OS_NAME = windows || $TRAVIS_OS_NAME = osx || ($TRAVIS_DIST = xenial && $TRAVIS_OS_NAME = linux)
