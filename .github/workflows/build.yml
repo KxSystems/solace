@@ -1,0 +1,157 @@
+name: Cross-platform Build and Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  release:
+    types: [created]
+
+jobs:
+  build:
+    if: ${{ github.repository == 'KxSystems/solace' }}
+    name: Build on ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: linux
+            cache_dir: cbuild
+            cache_key: solace-linux-v1
+            dep_url: https://products.solace.com/download/C_API_LINUX64
+            output_file: kdbsolace-linux.tgz
+            artifact_name: kdbsolace-linux
+
+          - os: macos-latest
+            label: mac
+            cache_dir: cbuild
+            cache_key: solace-mac-v1
+            dep_url: https://products.solace.com/download/C_API_OSX
+            output_file: kdbsolace-osx.tgz
+            artifact_name: kdbsolace-osx
+
+          - os: windows-latest
+            label: windows
+            cache_dir: cbuild
+            cache_key: solace-windows-v1
+            dep_url: https://products.solace.com/download/C_API_VS2015
+            output_file: kdbsolace-windows.zip
+            artifact_name: kdbsolace-windows
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Restore cached platform dependency
+        id: cache-solace
+        uses: actions/cache@v5
+        with:
+          path: ${{ matrix.cache_dir }}
+          key: ${{ runner.os }}-${{ matrix.cache_key }}
+          restore-keys: |
+            ${{ runner.os }}-solace-
+
+      - name: Download Linux dependency
+        if: runner.os == 'Linux' && steps.cache-solace.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "${{ matrix.cache_dir }}"
+          wget -q "${{ matrix.dep_url }}"
+          tar xvf C_API_LINUX64 -C "${{ matrix.cache_dir }}" --strip-components=1
+          ls -l "${{ matrix.cache_dir }}"
+
+      - name: Download macOS dependency
+        if: runner.os == 'macOS' && steps.cache-solace.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "${{ matrix.cache_dir }}"
+          wget -q "${{ matrix.dep_url }}"
+          tar xvf C_API_OSX -C "${{ matrix.cache_dir }}" --strip-components=1
+          ls -l "${{ matrix.cache_dir }}"
+
+      - name: Download Windows dependency
+        if: runner.os == 'Windows' && steps.cache-solace.outputs.cache-hit != 'true'
+        shell: bash 
+        run: |
+          mkdir -p "${{ matrix.cache_dir }}"
+          curl -fsSL -o C_API_VS2015 "${{ matrix.dep_url }}"
+          tar xvf C_API_VS2015 -C "${{ matrix.cache_dir }}" --strip-components=1
+
+      - name: Build on Linux and macOS
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        env:
+          SOLACE_INSTALL_DIR: ${{ github.workspace }}/${{ matrix.cache_dir }}
+        run: |
+          echo "Using ${{ env.SOLACE_INSTALL_DIR }} for solace libs"
+          mkdir build &&
+          cd build &&
+          cmake .. &&
+          cmake --build . &&
+          ls -l ./kdbsolace/ &&
+          cd .. &&
+          tar  -zcvf "${{ matrix.output_file }}" -C build/kdbsolace .
+
+      - name: Build on Windows
+        if: runner.os == 'Windows'
+        env:
+          SOLACE_INSTALL_DIR: ${{ github.workspace }}\${{ matrix.cache_dir }}
+        shell: pwsh
+        run: |
+          mkdir build 
+          cd build 
+          cmake .. -DCMAKE_BUILD_TYPE=Release 
+          cmake --build . --config Release 
+          ls -l .\kdbsolace\ &&
+          cd .. &&
+          7z a -tzip -r "${{ matrix.output_file }}" .\build\kdbsolace\*
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.output_file }}
+          retention-days: 1
+
+  release:
+    name: Upload release assets
+    if: github.event_name == 'release' && ${{ github.repository == 'KxSystems/solace' }}
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*"
+          path: artifacts
+
+      - name: Rename files to include release tag
+        shell: bash
+        run: |
+          mkdir -p release-files
+          TAG="${GITHUB_REF_NAME}"
+          find artifacts -type f | while read -r file; do
+            base="$(basename "$file")"
+            ext="${base##*.}"
+            name="${base%.*}"
+
+            if [[ "$base" == "$ext" ]]; then
+              # no extension
+              new_name="${name}-${TAG}"
+            else
+              new_name="${name}-${TAG}.${ext}"
+            fi
+
+            cp "$file" "release-files/$new_name"
+          done
+          ls -la release-files
+
+      - name: Upload assets to GitHub Release
+        uses: softprops/action-gh-release@v2.6.1
+        with:
+          files: release-files/*
