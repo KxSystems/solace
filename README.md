@@ -1,6 +1,7 @@
 # ![Solace](docs/solace.jpeg) kdb+ interface for Solace PubSub+ broker
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/kxsystems/solace?include_prereleases)](https://github.com/kxsystems/solace/releases) [![Travis (.org) branch](https://img.shields.io/travis/kxsystems/solace/master?label=travis%20build)](https://travis-ci.org/kxsystems/solace/branches)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/kxsystems/solace?include_prereleases)](https://github.com/kxsystems/solace/releases) 
+[![Build Status](https://github.com/KxSystems/solace/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/KxSystems/solace/actions/workflows/build.yml)
 
 A KX [Fusion interface](https://code.kx.com/q/interfaces/#fusion-interfaces)
 
