@@ -680,6 +680,7 @@ K init_solace(K options)
 
 K destroy_solace(K a)
 {
+    (void)a; /* unused parameter */
     solClient_returnCode_t retCode = SOLCLIENT_OK;
     if (session_p != NULL)
     {
@@ -704,6 +705,7 @@ K destroy_solace(K a)
 
 K version_solace(K unused)
 {
+    (void)unused; /* unused parameter */
     solClient_version_info_pt version = NULL;
     solClient_version_get (&version);
     K keys = knk(3,ks((char*)"solVersion"),ks((char*)"solDate"),ks((char*)"solVariant"));
