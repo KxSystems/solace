@@ -2,6 +2,9 @@
 #ifdef _WIN32
 #pragma comment(lib,"ws2_32.lib")
 #pragma comment(lib,"q.lib")
+#pragma warning(disable: 4710)  /* specified function was marked for inline expansion, but the compiler didn't inline the function */
+#pragma warning(disable: 4711)  /* function selected for inline expansion */
+#pragma warning(disable: 4820)  /* bytes padding added after construct 'member_name' */
 #endif
 #include "socketpair.c"
 #include "solclient/solClient.h"
@@ -107,6 +110,7 @@ bool storePartialWrite(char* data, int dataSize, int numWritten)
 
 static void socketWrittableCbFunc(solClient_opaqueContext_pt opaqueContext_p, solClient_fd_t fd, solClient_fdEvent_t events, void *user_p)
 {
+    (void)user_p; /* unused callback param */
     if (!BLOCKED_PARTIAL_SEND_DATA.empty())
     {
         int numWritten = send(SPAIR[1], BLOCKED_PARTIAL_SEND_DATA.c_str(), BLOCKED_PARTIAL_SEND_DATA.size(), 0);
@@ -448,6 +452,8 @@ K kdbCallback(I d)
 /* The message receive callback function is mandatory for session creation. Gets called with msgs from direct subscriptions. */
 solClient_rxMsgCallback_returnCode_t defaultSubCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_opaqueMsg_pt msg_p, void *user_p )
 {
+    (void)user_p; /* unused callback param */
+    (void)opaqueSession_p; /* unused callback param */
     KdbSolaceEvent msgAndSource;
     msgAndSource._type = DIRECT_MSG_EVENT;
     msgAndSource._event._directMsg=msg_p;
@@ -458,6 +464,7 @@ solClient_rxMsgCallback_returnCode_t defaultSubCallback ( solClient_opaqueSessio
 
 solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_opaqueMsg_pt msg_p, void *user_p )
 {
+    (void)user_p; /* unused callback param */
     KdbSolaceEvent msgAndSource;
     msgAndSource._type = QUEUE_MSG_EVENT;
     msgAndSource._event._queueMsg._msg=msg_p;
@@ -469,6 +476,7 @@ solClient_rxMsgCallback_returnCode_t guaranteedSubCallback ( solClient_opaqueFlo
 
 void flowEventCallback ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_flow_eventCallbackInfo_pt eventInfo_p, void *user_p )
 {
+    (void)user_p; /* unused callback param */
     int destinationType = -1;
     const char* destinationName = "";
     solClient_destination_t destination;
@@ -533,6 +541,8 @@ void flowEventCallback ( solClient_opaqueFlow_pt opaqueFlow_p, solClient_flow_ev
  *****************************************************************************/
 void eventCallback ( solClient_opaqueSession_pt opaqueSession_p, solClient_session_eventCallbackInfo_pt eventInfo_p, void *user_p )
 {
+    (void)user_p; /* unused callback param */
+    (void)opaqueSession_p; /* unused callback param */
     if (!KDB_SESSION_EVENT_CALLBACK_FUNC.empty())
     {
         // send details to kdb+
@@ -670,6 +680,7 @@ K init_solace(K options)
 
 K destroy_solace(K a)
 {
+    (void)a; /* unused parameter */
     solClient_returnCode_t retCode = SOLCLIENT_OK;
     if (session_p != NULL)
     {
@@ -694,6 +705,7 @@ K destroy_solace(K a)
 
 K version_solace(K unused)
 {
+    (void)unused; /* unused parameter */
     solClient_version_info_pt version = NULL;
     solClient_version_get (&version);
     K keys = knk(3,ks((char*)"solVersion"),ks((char*)"solDate"),ks((char*)"solVariant"));
