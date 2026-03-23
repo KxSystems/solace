@@ -2,7 +2,8 @@
 #ifdef _WIN32
 #pragma comment(lib,"ws2_32.lib")
 #pragma comment(lib,"q.lib")
-#pragma warning(disable: 4710)
+#pragma warning(disable: 4710)  /* specified function was marked for inline expansion, but the compiler didn't inline the function */
+#pragma warning(disable: 4820)  /* bytes padding added after construct 'member_name' */
 #endif
 #include "socketpair.c"
 #include "solclient/solClient.h"
