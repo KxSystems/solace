@@ -2,6 +2,7 @@
 #ifdef _WIN32
 #pragma comment(lib,"ws2_32.lib")
 #pragma comment(lib,"q.lib")
+#pragma warning(disable: 4710)
 #endif
 #include "socketpair.c"
 #include "solclient/solClient.h"
